@@ -127,6 +127,16 @@ async function initDb() {
       reason TEXT NOT NULL, details TEXT NOT NULL DEFAULT '',
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
+    CREATE TABLE IF NOT EXISTS sponsor_campaigns (
+      id BIGSERIAL PRIMARY KEY, member_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      business_name TEXT NOT NULL, campaign_title TEXT NOT NULL, description TEXT NOT NULL,
+      website_url TEXT NOT NULL DEFAULT '', package_code TEXT NOT NULL,
+      amount_kobo INTEGER NOT NULL, duration_days INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'awaiting_payment' CHECK (status IN ('awaiting_payment','pending_review','approved','rejected','completed')),
+      payment_reference TEXT UNIQUE, paid_at TIMESTAMPTZ, starts_at TIMESTAMPTZ, ends_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS sponsor_campaigns_member_idx ON sponsor_campaigns(member_id,created_at DESC);
   `);
   await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS photo_data BYTEA, ADD COLUMN IF NOT EXISTS photo_type TEXT");
 }
@@ -199,7 +209,77 @@ async function verifyAndActivatePaystack(reference, expectedMemberId) {
     [memberId, meta.plan_code, reference, startsAt.toISOString(), endsAt.toISOString()]
   );
 }
-app.get("/api/payments/paystack/config", (_req, res) => res.json({ configured: paystackConfigured(), currency: "NGN", plans: Object.keys(paidPlans) }));
+const sponsorPlans = {
+  weekly: { amount: 1000000, days: 7, label: "7 days", price: "₦10,000" },
+  monthly: { amount: 2500000, days: 30, label: "30 days", price: "₦25,000" },
+  quarterly: { amount: 6000000, days: 90, label: "90 days", price: "₦60,000" }
+};
+app.get("/api/advertising/packages", (_req, res) => res.json({ currency: "NGN", packages: Object.entries(sponsorPlans).map(([code,p]) => ({ code, label: p.label, price: p.price, amount: p.amount / 100, days: p.days })) }));
+app.post("/api/advertising/campaigns", requireAuth, async (req, res, next) => {
+  try {
+    const businessName = String(req.body?.businessName || "").trim().slice(0,100);
+    const title = String(req.body?.title || "").trim().slice(0,100);
+    const description = String(req.body?.description || "").trim().slice(0,500);
+    let website = String(req.body?.website || "").trim().slice(0,300);
+    const packageCode = String(req.body?.packageCode || "");
+    const plan = sponsorPlans[packageCode];
+    if (!businessName || !title || !description || !plan) return res.status(400).json({ error: "Enter your business name, advert title, description, and package." });
+    if (website) {
+      try { const u = new URL(website); if (!["http:","https:"].includes(u.protocol)) throw new Error(); website = u.toString(); }
+      catch { return res.status(400).json({ error: "Enter a valid website link beginning with https:// or http://." }); }
+    }
+    if (!paystackConfigured()) return res.status(503).json({ error: "Advert booking is ready, but Paystack checkout is not connected yet. The site administrator must add the live Paystack key." });
+    const member = await pool.query("SELECT email FROM members WHERE id=$1", [req.session.memberId]);
+    if (!member.rowCount) return res.status(401).json({ error: "Please log in again." });
+    const baseUrl = String(process.env.APP_URL || "").replace(/\/$/, "");
+    if (!baseUrl || !/^https:\/\//i.test(baseUrl)) return res.status(503).json({ error: "The site administrator must set APP_URL to the public HTTPS Love Connect website address." });
+    const inserted = await pool.query(
+      "INSERT INTO sponsor_campaigns(member_id,business_name,campaign_title,description,website_url,package_code,amount_kobo,duration_days) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id",
+      [req.session.memberId,businessName,title,description,website,packageCode,plan.amount,plan.days]
+    );
+    try {
+      const tx = await paystackRequest("/transaction/initialize", {
+        email: member.rows[0].email, amount: plan.amount, currency: "NGN",
+        callback_url: baseUrl + "/api/payments/paystack/callback",
+        metadata: { product: "Love Connect sponsored campaign", campaign_id: String(inserted.rows[0].id), member_id: String(req.session.memberId), package_code: packageCode }
+      });
+      await pool.query("UPDATE sponsor_campaigns SET payment_reference=$1,updated_at=now() WHERE id=$2", [tx.reference,inserted.rows[0].id]);
+      res.json({ authorizationUrl: tx.authorization_url, reference: tx.reference, campaignId: inserted.rows[0].id });
+    } catch (e) {
+      await pool.query("UPDATE sponsor_campaigns SET status='rejected',updated_at=now() WHERE id=$1", [inserted.rows[0].id]);
+      throw e;
+    }
+  } catch (err) { next(err); }
+});
+app.get("/api/advertising/my-campaigns", requireAuth, async (req, res, next) => {
+  try {
+    const r = await pool.query("SELECT id,business_name,campaign_title,package_code,amount_kobo,duration_days,status,paid_at,starts_at,ends_at,created_at FROM sponsor_campaigns WHERE member_id=$1 ORDER BY created_at DESC LIMIT 50", [req.session.memberId]);
+    res.json({ campaigns: r.rows.map(c => ({ ...c, amount: Number(c.amount_kobo) / 100 })) });
+  } catch (err) { next(err); }
+});
+app.get("/api/advertising/admin/campaigns", requireAuth, async (req, res, next) => {
+  try {
+    const adminEmail = String(process.env.ADMIN_EMAIL || "").toLowerCase().trim();
+    if (!adminEmail) return res.status(503).json({ error: "Admin review is not configured. Set ADMIN_EMAIL in the server environment." });
+    const me = await pool.query("SELECT email FROM members WHERE id=$1", [req.session.memberId]);
+    if (!me.rowCount || me.rows[0].email.toLowerCase() !== adminEmail) return res.status(403).json({ error: "Admin access only." });
+    const r = await pool.query("SELECT c.*,m.email AS advertiser_email FROM sponsor_campaigns c JOIN members m ON m.id=c.member_id ORDER BY c.created_at DESC LIMIT 100");
+    res.json({ campaigns: r.rows });
+  } catch (err) { next(err); }
+});
+app.patch("/api/advertising/admin/campaigns/:id", requireAuth, async (req, res, next) => {
+  try {
+    const adminEmail = String(process.env.ADMIN_EMAIL || "").toLowerCase().trim();
+    const me = await pool.query("SELECT email FROM members WHERE id=$1", [req.session.memberId]);
+    if (!adminEmail || !me.rowCount || me.rows[0].email.toLowerCase() !== adminEmail) return res.status(403).json({ error: "Admin access only." });
+    const status = String(req.body?.status || "");
+    if (!["approved","rejected"].includes(status)) return res.status(400).json({ error: "Choose approved or rejected." });
+    const r = await pool.query("UPDATE sponsor_campaigns SET status=$1,starts_at=CASE WHEN $1='approved' THEN now() ELSE starts_at END,ends_at=CASE WHEN $1='approved' THEN now() + (duration_days || ' days')::interval ELSE ends_at END,updated_at=now() WHERE id=$2 AND status='pending_review' RETURNING id,status,starts_at,ends_at", [status,req.params.id]);
+    if (!r.rowCount) return res.status(404).json({ error: "Paid campaign not found or already reviewed." });
+    res.json({ campaign: r.rows[0] });
+  } catch (err) { next(err); }
+});
+app.get("/api/payments/paystack/config", (_req, res) => res.json({ configured: paystackConfigured(), currency: "NGN", plans: Object.keys(paidPlans), advertisingConfigured: paystackConfigured() }));
 app.post("/api/payments/paystack/initialize", requireAuth, async (req, res, next) => {
   try {
     if (!paystackConfigured()) return res.status(503).json({ error: "Paystack is not connected yet. The site administrator must add the Paystack secret key in the server's private environment settings." });
@@ -220,13 +300,31 @@ app.post("/api/payments/paystack/initialize", requireAuth, async (req, res, next
     res.json({ authorizationUrl: tx.authorization_url, reference: tx.reference });
   } catch (err) { next(err); }
 });
+async function verifyAndActivateSponsor(reference, expectedMemberId) {
+  if (!paystackConfigured()) throw new Error("Paystack has not been configured.");
+  const tx = await paystackRequest("/transaction/verify/" + encodeURIComponent(reference));
+  const meta = tx.metadata || {};
+  const campaignId = String(meta.campaign_id || "");
+  const memberId = String(meta.member_id || "");
+  const campaign = await pool.query("SELECT * FROM sponsor_campaigns WHERE id=$1 AND member_id=$2 AND payment_reference=$3", [campaignId,memberId,reference]);
+  if (tx.status !== "success" || tx.currency !== "NGN" || !campaign.rowCount ||
+      String(expectedMemberId || memberId) !== memberId ||
+      Number(tx.amount) !== Number(campaign.rows[0].amount_kobo) ||
+      String(tx.reference) !== String(reference) || meta.product !== "Love Connect sponsored campaign") {
+    throw new Error("Sponsored advert payment could not be verified.");
+  }
+  await pool.query("UPDATE sponsor_campaigns SET status=CASE WHEN status='awaiting_payment' THEN 'pending_review' ELSE status END,paid_at=COALESCE(paid_at,now()),updated_at=now() WHERE id=$1", [campaignId]);
+}
 app.get("/api/payments/paystack/callback", requireAuth, async (req, res) => {
   const baseUrl = String(process.env.APP_URL || "/").replace(/\/$/, "");
   try {
     const reference = String(req.query.reference || "");
     if (!reference) throw new Error("No payment reference was returned.");
-    await verifyAndActivatePaystack(reference, req.session.memberId);
-    return res.redirect(baseUrl + "/?payment=success");
+    const tx = await paystackRequest("/transaction/verify/" + encodeURIComponent(reference));
+    const product = tx.metadata?.product || "";
+    if (product === "Love Connect sponsored campaign") await verifyAndActivateSponsor(reference, req.session.memberId);
+    else await verifyAndActivatePaystack(reference, req.session.memberId);
+    return res.redirect(baseUrl + "/?payment=" + (product === "Love Connect sponsored campaign" ? "ad_submitted" : "success"));
   } catch (err) {
     console.error("Paystack callback verification failed:", err.message);
     return res.redirect(baseUrl + "/?payment=not_verified");
@@ -242,7 +340,9 @@ app.post("/api/payments/paystack/webhook", async (req, res) => {
     if (supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) return res.sendStatus(401);
     const event = req.body || {};
     if (event.event === "charge.success" && event.data?.reference) {
-      await verifyAndActivatePaystack(String(event.data.reference), event.data.metadata?.member_id);
+      const product = event.data.metadata?.product || "";
+      if (product === "Love Connect sponsored campaign") await verifyAndActivateSponsor(String(event.data.reference), event.data.metadata?.member_id);
+      else await verifyAndActivatePaystack(String(event.data.reference), event.data.metadata?.member_id);
     }
     return res.sendStatus(200);
   } catch (err) {
