@@ -55,7 +55,7 @@ const upload = multer({
     destination: (_req, _file, cb) => cb(null, uploadDir),
     filename: (_req, file, cb) => cb(null, crypto.randomUUID() + path.extname(file.originalname).toLowerCase().slice(0, 8))
   }),
-  limits: { fileSize: 40 * 1024 * 1024, files: 1 },
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
   fileFilter: (_req, file, cb) => cb(null, allowedVideoTypes.has(file.mimetype))
 });
 
@@ -437,7 +437,7 @@ app.post("/api/messages/:memberId", requireAuth, requireActiveSubscription, asyn
 
 app.post("/api/videos", requireAuth, requireActiveSubscription, (req, res, next) => {
   upload.single("video")(req, res, async err => {
-    if (err) return res.status(400).json({ error: "Upload rejected. Use MP4, WebM, or MOV video under 40 MB." });
+    if (err) return res.status(400).json({ error: "Upload rejected. Use MP4, WebM, or MOV video up to 10 MB." });
     if (!req.file) return res.status(400).json({ error: "Choose an MP4, WebM, or MOV video." });
     try {
       const { stdout } = await execFileAsync(ffprobe.path, ["-v","error","-show_entries","format=duration","-of","default=noprint_wrappers=1:nokey=1",req.file.path]);
