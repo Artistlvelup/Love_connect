@@ -27,8 +27,15 @@ if (isProduction && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.l
   process.exit(1);
 }
 
+const databaseUrl = new URL(process.env.DATABASE_URL);
+// When DATABASE_SSL=true, remove URL SSL parameters so node-postgres does not
+// override the explicit TLS configuration below.
+if (process.env.DATABASE_SSL === "true") {
+  databaseUrl.searchParams.delete("sslmode");
+  databaseUrl.searchParams.delete("ssl");
+}
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: databaseUrl.toString(),
   ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : undefined
 });
 
