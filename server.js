@@ -215,6 +215,12 @@ const sponsorPlans = {
   quarterly: { amount: 6000000, days: 90, label: "90 days", price: "₦60,000" }
 };
 app.get("/api/advertising/packages", (_req, res) => res.json({ currency: "NGN", packages: Object.entries(sponsorPlans).map(([code,p]) => ({ code, label: p.label, price: p.price, amount: p.amount / 100, days: p.days })) }));
+app.get("/api/advertising/active", requireAuth, async (_req, res, next) => {
+  try {
+    const r = await pool.query("SELECT id,business_name,campaign_title,description,website_url,ends_at FROM sponsor_campaigns WHERE status='approved' AND starts_at<=now() AND ends_at>now() ORDER BY created_at DESC LIMIT 10");
+    res.json({ campaigns: r.rows });
+  } catch (err) { next(err); }
+});
 app.post("/api/advertising/campaigns", requireAuth, async (req, res, next) => {
   try {
     const businessName = String(req.body?.businessName || "").trim().slice(0,100);
