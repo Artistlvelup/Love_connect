@@ -1,0 +1,22 @@
+{
+  "name": "love-connect",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Love Connect dating and connections platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-pg-simple": "^10.0.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "ffprobe-static": "^3.1.0",
+    "helmet": "^8.0.0",
+    "multer": "^2.0.0",
+    "pg": "^8.13.1"
+  }
+}
