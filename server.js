@@ -407,7 +407,8 @@ app.post("/api/call-signals", requireAuth, requireActiveSubscription, async (req
     res.status(201).json({ ok: true, id: r.rows[0].id });
   } catch (err) { next(err); }
 });
-\napp.get("/api/messages/:memberId", requireAuth, requireActiveSubscription, async (req, res, next) => {
+
+app.get("/api/messages/:memberId", requireAuth, requireActiveSubscription, async (req, res, next) => {
   try {
     const me = String(req.session.memberId), other = String(req.params.memberId);
     const match = await pool.query("SELECT 1 FROM matches WHERE (member_a=$1 AND member_b=$2) OR (member_a=$2 AND member_b=$1)", [me,other]);
