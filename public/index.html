@@ -33,6 +33,33 @@ button{transition:transform .15s,box-shadow .15s,background .15s}button:hover{tr
 @media(max-width:520px){.photo-editor{align-items:flex-start;flex-direction:column}.profile-preview,.profile-placeholder{width:84px;height:84px;flex-basis:84px}}
  .video-feed-list{display:grid;gap:16px}.video-post video{display:block;width:100%;max-height:70vh;aspect-ratio:9/16;object-fit:contain;background:#18121b;border-radius:18px}.ad-space{border:1px dashed #d7a3c0;background:#fff7fb} 
 .discover-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px}.discover-search{flex:1;min-width:0;border:1px solid var(--line);border-radius:15px;background:#fff;padding:13px 16px}.post-video-btn{white-space:nowrap;background:#64214f;color:white}.discover-heading{padding:25px 22px;border-radius:24px;background:linear-gradient(120deg,#ffe1ef,#f4e8ff 58%,#fff);margin-bottom:16px}.discover-heading h1{font-size:clamp(1.65rem,4vw,2.5rem);line-height:1.12;margin:0 0 8px}.discover-heading p{margin:0;color:#6c5366}.filter-row{display:flex;gap:8px;overflow:auto;padding:2px 0 12px;margin-bottom:8px}.filter-chip{white-space:nowrap;border:1px solid var(--line);background:white;color:var(--plum);border-radius:999px;padding:9px 15px}.filter-chip.active{background:var(--plum);color:white}.story-row{display:flex;gap:15px;overflow-x:auto;padding:8px 2px 18px}.story{flex:0 0 68px;text-align:center;font-size:.78rem}.story-ring{width:62px;height:62px;border-radius:50%;padding:3px;margin:0 auto 5px;background:linear-gradient(135deg,#f35d9a,#9a55df)}.story-ring span{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:white;border:2px solid white;color:var(--plum);font-size:1.35rem;font-weight:800}.story img{width:100%;height:100%;object-fit:cover;border-radius:50%;border:2px solid white}.feed{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:16px}.person{overflow:hidden;border-radius:20px}.person .portrait{height:260px;background:linear-gradient(145deg,#f5d8e8,#eadff7);display:grid;place-items:center;font-size:3rem}.person .portrait img{width:100%;height:100%;object-fit:cover}.personbody{padding:15px}.video-feed-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:18px}.video-post{overflow:hidden;border-radius:22px;background:#fff;box-shadow:0 8px 28px #64214f12}.video-post video{width:100%;max-height:580px;aspect-ratio:9/16;object-fit:cover;background:#21151f}.video-post .personbody{padding:14px 16px}.video-actions{display:flex;gap:8px;padding:0 14px 14px}.video-actions button{flex:1;padding:10px 8px}.sponsor-card{border:1px solid #ead5e4;border-radius:22px;overflow:hidden;background:linear-gradient(140deg,#fff0f7,#f0eaff);padding:20px;display:flex;flex-direction:column;justify-content:center;min-height:230px}.sponsor-card .sponsor-art{font-size:2.5rem;margin:10px 0}.sponsor-card h3{margin:4px 0}.sponsor-card .pill{align-self:flex-start}.why-ad{font-size:.78rem;color:#796e79;margin-top:10px}.mobile-nav{display:none}@media(max-width:700px){.topin{min-height:60px}.top nav{display:none!important}.wrap{padding:0 12px}.discover-toolbar{gap:7px}.discover-search{padding:11px 12px}.post-video-btn{padding:11px 12px;font-size:.88rem}.discover-heading{padding:22px 17px}.feed{grid-template-columns:1fr}.person .portrait{height:300px}.video-feed-list{grid-template-columns:1fr}.mobile-nav{position:fixed;z-index:10;bottom:0;left:0;right:0;display:flex;justify-content:space-around;gap:2px;background:#fffdfef5;backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom))}.mobile-nav button{background:transparent;color:#796e79;padding:7px 5px;font-size:.73rem;display:flex;flex-direction:column;align-items:center;gap:2px;flex:1}.mobile-nav button.active{color:var(--pink)}body{padding-bottom:75px}}
+
+/* Professional mixed-colour finish: rich midnight blue, violet and teal */
+:root{--pink:#ff668f;--plum:#5937a6;--ink:#182238;--muted:#65718a;--paper:#edf2ff;--line:#d8def0;--green:#0f9f83}
+body{background:radial-gradient(ellipse at 8% 4%,rgba(255,102,143,.42),transparent 32%),radial-gradient(ellipse at 92% 12%,rgba(123,92,246,.46),transparent 34%),radial-gradient(ellipse at 52% 100%,rgba(20,184,166,.28),transparent 38%),linear-gradient(135deg,#111a32 0%,#1b2850 48%,#292047 100%);background-attachment:fixed;color:#f8faff;min-height:100vh}
+.top{background:rgba(17,26,50,.92);border-bottom:1px solid rgba(190,201,255,.2);box-shadow:0 8px 28px rgba(4,8,24,.24)}
+.brand{color:#fff}.brand span{color:#ff789d}
+nav button{color:#d8def4}nav button.active,nav button:hover{background:linear-gradient(120deg,#ff668f,#8b5cf6);color:#fff}
+.hero h1{color:#fff}.hero p{color:#d5def5}
+.discover-heading{background:linear-gradient(120deg,#ff668f 0%,#8858d9 52%,#16a99a 100%);color:#fff;box-shadow:0 14px 35px rgba(4,8,24,.24)}
+.discover-heading p{color:#fff}
+.discover-search{background:#fff;color:#182238;border-color:#c9d3f0}
+.filter-chip{background:#f7f8ff;color:#332653;border-color:#d8def0}.filter-chip.active{background:linear-gradient(120deg,#ff668f,#7652d6);color:#fff;border-color:transparent}
+.story-ring{background:linear-gradient(135deg,#ff668f,#8b5cf6,#14b8a6);padding:3px}
+.story-ring>*{border:2px solid #fff}
+.post-video-btn{background:linear-gradient(120deg,#ff668f,#7652d6);color:#fff}
+.panel,.card{background:#fff;border-color:#dce2f5;box-shadow:0 14px 38px rgba(4,8,24,.18);color:#182238}
+.personbody,.personbody p,.personbody h3{color:#182238}
+.pill{background:#eee8ff;color:#5937a6}
+.primary{background:linear-gradient(120deg,#ff668f,#7652d6);color:#fff}
+.soft{background:#e9e7ff;color:#4b348e}
+.sponsor,.ad-space{background:linear-gradient(135deg,#fff2f7,#f1edff);border-color:#a99ae9;color:#30244d}
+.sponsor b{color:#b52e6a}
+.welcome-card{background:linear-gradient(135deg,#fff,#f1edff)}
+.footer{background:rgba(17,26,50,.72);border-top-color:rgba(190,201,255,.2);color:#d5def5}
+.empty{background:#f7f8ff;color:#65718a;border-color:#c9d3f0}
+@media(max-width:520px){.top{background:rgba(17,26,50,.96)}}
+
 </style>
 </head>
 <body>
