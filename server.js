@@ -237,7 +237,7 @@ app.post("/api/advertising/:id/event", requireAuth, rateLimit({ windowMs: 60 * 1
   try {
     const id = String(req.params.id || "");
     const event = String(req.body?.event || "");
-    if (!/^\\d+$/.test(id) || !["impression", "click"].includes(event)) return res.status(400).json({ error: "Invalid advert event." });
+    if (!/^\d+$/.test(id) || !["impression", "click"].includes(event)) return res.status(400).json({ error: "Invalid advert event." });
     const campaign = await pool.query("SELECT id FROM sponsor_campaigns WHERE id=$1 AND status='approved' AND starts_at<=now() AND ends_at>now()", [id]);
     if (!campaign.rowCount) return res.status(404).json({ error: "Advert is not active." });
     if (event === "impression") {
