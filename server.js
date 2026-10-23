@@ -471,7 +471,6 @@ app.get("/api/discover", requireAuth, async (req, res, next) => {
       FROM members m
       WHERE m.id <> $1
         AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=m.id) OR (b.blocker_id=m.id AND b.blocked_id=$1))
-        AND NOT EXISTS (SELECT 1 FROM likes l WHERE l.from_member=$1 AND l.to_member=m.id)
       ORDER BY m.created_at DESC LIMIT 50
     `, [req.session.memberId]);
     const ids = r.rows.map(x => x.id);
