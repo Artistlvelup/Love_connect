@@ -12,11 +12,20 @@ const path = require("node:path");
 const fs = require("node:fs");
 const crypto = require("node:crypto");
 const { promisify } = require("node:util");
+const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const isProduction = process.env.NODE_ENV === "production";
 const execFileAsync = promisify(execFile);
+const r2Bucket = process.env.R2_BUCKET_NAME || "";
+const r2Configured = () => !!(process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && r2Bucket);
+const r2Client = r2Configured() ? new S3Client({
+  region: "auto",
+  endpoint: process.env.R2_ENDPOINT || ("https://" + process.env.R2_ACCOUNT_ID + ".r2.cloudflarestorage.com"),
+  credentials: { accessKeyId: process.env.R2_ACCESS_KEY_ID, secretAccessKey: process.env.R2_SECRET_ACCESS_KEY }
+}) : null;
 
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL is required. Configure PostgreSQL before starting the server.");
@@ -139,6 +148,7 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS sponsor_campaigns_member_idx ON sponsor_campaigns(member_id,created_at DESC);
   `);
   await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS photo_data BYTEA, ADD COLUMN IF NOT EXISTS photo_type TEXT");
+  await pool.query("ALTER TABLE videos ADD COLUMN IF NOT EXISTS storage_key TEXT");
 }
 
 function requireAuth(req, res, next) {
@@ -587,8 +597,17 @@ app.post("/api/videos", requireAuth, requireActiveSubscription, (req, res, next)
         fs.unlink(req.file.path, () => {});
         return res.status(400).json({ error: "Videos must be 30 seconds or shorter." });
       }
-      const r = await pool.query("INSERT INTO videos(member_id,filename,original_name,duration_seconds) VALUES($1,$2,$3,$4) RETURNING id,duration_seconds,created_at", [req.session.memberId,req.file.filename,req.file.originalname.slice(0,255),duration]);
-      res.status(201).json({ video: r.rows[0], note: "Uploaded. Production launch requires durable video storage and moderation." });
+      let storageKey = null;
+      if (r2Configured()) {
+        storageKey = "videos/" + String(req.session.memberId) + "/" + req.file.filename;
+        await r2Client.send(new PutObjectCommand({
+          Bucket: r2Bucket, Key: storageKey, Body: fs.createReadStream(req.file.path),
+          ContentType: req.file.mimetype, CacheControl: "private, max-age=3600"
+        }));
+      }
+      const r = await pool.query("INSERT INTO videos(member_id,filename,storage_key,original_name,duration_seconds) VALUES($1,$2,$3,$4,$5) RETURNING id,duration_seconds,created_at", [req.session.memberId,req.file.filename,storageKey,req.file.originalname.slice(0,255),duration]);
+      if (storageKey) fs.unlink(req.file.path, () => {});
+      res.status(201).json({ video: r.rows[0], storage: storageKey ? "cloudflare-r2" : "temporary-local", note: storageKey ? "Video saved to durable cloud storage." : "R2 storage is not configured yet; this upload is using temporary server storage." });
     } catch (e) {
       fs.unlink(req.file.path, () => {});
       next(e);
@@ -618,8 +637,15 @@ app.get("/api/video-feed", requireAuth, async (req, res, next) => {
 
 app.get("/api/videos/:id", requireAuth, async (req, res, next) => {
   try {
-    const r = await pool.query("SELECT v.filename,v.original_name,v.duration_seconds FROM videos v WHERE v.id=$1 AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=v.member_id) OR (b.blocker_id=v.member_id AND b.blocked_id=$2))", [req.params.id,req.session.memberId]);
+    const r = await pool.query("SELECT v.filename,v.storage_key,v.original_name,v.duration_seconds FROM videos v WHERE v.id=$1 AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=v.member_id) OR (b.blocker_id=v.member_id AND b.blocked_id=$2))", [req.params.id,req.session.memberId]);
     if (!r.rowCount) return res.status(404).json({ error: "Video not found." });
+    if (r.rows[0].storage_key) {
+      if (!r2Configured()) return res.status(503).json({ error: "Cloud video storage is not connected." });
+      const url = await getSignedUrl(r2Client, new GetObjectCommand({
+        Bucket: r2Bucket, Key: r.rows[0].storage_key, ResponseContentDisposition: "inline"
+      }), { expiresIn: 3600 });
+      return res.redirect(302, url);
+    }
     res.sendFile(path.join(uploadDir, path.basename(r.rows[0].filename)));
   } catch (err) { next(err); }
 });
