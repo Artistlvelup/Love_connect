@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#8d245e">
 <title>Love Connect — Meet your kind of connection</title>
 <style>
@@ -89,6 +89,26 @@ button:hover,button:focus,button:active{transform:none!important}
   }
   #mobileNav.mobile-nav button{color:#d8def4!important;transform:none!important;min-height:44px}
   #mobileNav.mobile-nav button.active{color:#ff789d!important}
+}
+
+
+/* Mobile stability: prevent pinch zoom and keep shortcuts fixed above the bottom safe area */
+html,body{overscroll-behavior-x:none}
+@media(max-width:700px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden;touch-action:pan-x pan-y}
+  #mobileNav.mobile-nav{
+    position:fixed!important;inset:auto 0 0 0!important;
+    display:flex!important;visibility:visible!important;opacity:1!important;
+    width:100vw!important;max-width:100vw!important;
+    z-index:2147483000!important;transform:translateZ(0)!important;
+    margin:0!important;border-radius:0!important;
+    padding:8px 4px calc(8px + env(safe-area-inset-bottom))!important;
+    background:#111a32!important;border-top:1px solid rgba(190,201,255,.35)!important;
+    box-shadow:0 -6px 24px rgba(4,8,24,.3)!important;
+    will-change:transform;
+  }
+  #mobileNav.mobile-nav button{touch-action:manipulation;min-height:44px;transform:none!important}
+  body{padding-bottom:calc(86px + env(safe-area-inset-bottom))!important}
 }
 
 </style>
