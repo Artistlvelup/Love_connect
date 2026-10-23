@@ -7,7 +7,7 @@ A separate, worldwide adult dating and connections platform. This repository is 
 - Profile editing and discovery feed
 - Likes and mutual-match creation
 - Private text messaging between matched members
-- Profile video upload with server-side duration validation (maximum 30 seconds)
+- Profile video upload with server-side duration validation (maximum 30 seconds; 10 MB cap for the initial test)
 - Report and block endpoints
 - Subscription plan display and sponsored-placement UI groundwork
 
@@ -25,7 +25,7 @@ The server creates its application tables on startup.
 
 ## Important before public launch
 - This app is not deployed by committing files to GitHub.
-- Do not deploy with local video storage: files on a typical hosted service's local filesystem may be temporary. Configure durable object storage (for example, an S3-compatible bucket) and set spending/usage limits before enabling public uploads.
+- For the one-time test only, the app stores the test video on the server's local filesystem with a 10 MB upload limit. Do not rely on this for launch: on Render Free, uploaded files disappear on restart, spin-down, or redeploy. Before public launch, configure durable video storage and set usage/spending limits. This does not require Supabase.
 - Configure a managed PostgreSQL provider and verify its price/free allowance before creating anything billable. This app does not use Supabase.
 - Add email verification, password reset, account deletion/data export, age/consent checks, stronger moderation review, abuse monitoring, and production security testing before accepting the public.
 - Payment processing and ad networks require separate approved accounts and server-side integrations. The displayed plans and sponsored placements are not payment/ad integrations yet.
