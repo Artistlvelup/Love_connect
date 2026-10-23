@@ -548,7 +548,7 @@ app.post("/api/call-signals", requireAuth, requireActiveSubscription, async (req
   } catch (err) { next(err); }
 });
 
-app.get("/api/messages/:memberId", requireAuth, async (req, res, next) => {
+app.get("/api/messages/:memberId", requireAuth, requireActiveSubscription, async (req, res, next) => {
   try {
     const me = String(req.session.memberId), other = String(req.params.memberId);
     const match = await pool.query("SELECT 1 FROM matches WHERE (member_a=$1 AND member_b=$2) OR (member_a=$2 AND member_b=$1)", [me,other]);
@@ -562,7 +562,7 @@ app.get("/api/messages/:memberId", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.post("/api/messages/:memberId", requireAuth, async (req, res, next) => {
+app.post("/api/messages/:memberId", requireAuth, requireActiveSubscription, async (req, res, next) => {
   try {
     const me = String(req.session.memberId), other = String(req.params.memberId);
     const body = String(req.body?.body || "").trim();
