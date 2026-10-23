@@ -560,6 +560,8 @@ app.post("/api/call-signals", requireAuth, requireActiveSubscription, async (req
 app.get("/api/messages/:memberId", requireAuth, requireActiveSubscription, async (req, res, next) => {
   try {
     const me = String(req.session.memberId), other = String(req.params.memberId);
+    const blocked = await pool.query("SELECT 1 FROM member_blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1)", [me,other]);
+    if (blocked.rowCount) return res.status(403).json({ error: "Messaging is unavailable because one member has blocked the other." });
     const match = await pool.query("SELECT 1 FROM matches WHERE (member_a=$1 AND member_b=$2) OR (member_a=$2 AND member_b=$1)", [me,other]);
     if (!match.rowCount) return res.status(403).json({ error: "Private messaging is available only between matches." });
     const r = await pool.query(`
