@@ -271,8 +271,8 @@ app.post("/api/auth/register", async (req, res, next) => {
     }
     const hash = await bcrypt.hash(password, 12);
     const result = await pool.query(
-      "INSERT INTO members(email,password_hash,display_name,birth_date,country) VALUES($1,$2,$3,$4,$5) RETURNING id,email,display_name,country,bio,looking_for",
-      [email.toLowerCase().trim(), hash, displayName.trim(), birthDate, String(country || "").slice(0, 80)]
+      "INSERT INTO members(email,password_hash,display_name,birth_date,country,looking_for) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,email,display_name,country,bio,looking_for",
+      [email.toLowerCase().trim(), hash, displayName.trim(), birthDate, String(country || "").slice(0, 80), String(req.body?.lookingFor || "Connections").slice(0, 80)]
     );
     req.session.memberId = result.rows[0].id;
     res.status(201).json({ member: publicMember(result.rows[0]) });
@@ -415,7 +415,7 @@ app.post("/api/call-signals", requireAuth, requireActiveSubscription, async (req
   } catch (err) { next(err); }
 });
 
-app.get("/api/messages/:memberId", requireAuth, requireActiveSubscription, async (req, res, next) => {
+app.get("/api/messages/:memberId", requireAuth, async (req, res, next) => {
   try {
     const me = String(req.session.memberId), other = String(req.params.memberId);
     const match = await pool.query("SELECT 1 FROM matches WHERE (member_a=$1 AND member_b=$2) OR (member_a=$2 AND member_b=$1)", [me,other]);
@@ -429,7 +429,7 @@ app.get("/api/messages/:memberId", requireAuth, requireActiveSubscription, async
   } catch (err) { next(err); }
 });
 
-app.post("/api/messages/:memberId", requireAuth, requireActiveSubscription, async (req, res, next) => {
+app.post("/api/messages/:memberId", requireAuth, async (req, res, next) => {
   try {
     const me = String(req.session.memberId), other = String(req.params.memberId);
     const body = String(req.body?.body || "").trim();
