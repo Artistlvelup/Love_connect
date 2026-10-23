@@ -102,6 +102,6 @@ async function handleSignals(){
 function startSignalPolling(){if(!signalTimer){handleSignals();signalTimer=setInterval(handleSignals,2000)}}
 async function cleanupCall(notify=true){if(notify&&activeCallId&&activeCallMember)await sendSignal("end",{}).catch(()=>{});if(pc){pc.onicecandidate=null;pc.close();pc=null}if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null}$("localVideo").srcObject=null;$("remoteVideo").srcObject=null;$("endCall").disabled=true;$("acceptCall").disabled=true;$("callStatus").textContent="No active call.";activeCallId=null;activeCallMember=null;pendingOffer=null}
 $("acceptCall").onclick=acceptIncomingCall;$("endCall").onclick=()=>cleanupCall(true);
-\nasync function logout(){if(pc)await cleanupCall(true);if(signalTimer)clearInterval(signalTimer);try{await api("/api/auth/logout",{method:"POST",body:"{}"})}catch{}location.reload()}$("logout").onclick=logout;$("adInfo").onclick=()=>$("adDetails").classList.toggle("hidden");
+async function logout(){if(pc)await cleanupCall(true);if(signalTimer)clearInterval(signalTimer);try{await api("/api/auth/logout",{method:"POST",body:"{}"})}catch{}location.reload()}$("logout").onclick=logout;$("adInfo").onclick=()=>$("adDetails").classList.toggle("hidden");
 authMode(true);checkSession();
 </script></body></html>
