@@ -75,6 +75,15 @@ async function initDb() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
     CREATE INDEX IF NOT EXISTS subscriptions_member_status_idx ON subscriptions(member_id,status,ends_at);
+    CREATE TABLE IF NOT EXISTS call_signals (
+      id BIGSERIAL PRIMARY KEY, call_id UUID NOT NULL,
+      from_member BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      to_member BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      signal_type TEXT NOT NULL CHECK (signal_type IN ('offer','answer','ice','end')),
+      payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS call_signals_recipient_idx ON call_signals(to_member,id);
     CREATE TABLE IF NOT EXISTS likes (
       from_member BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
       to_member BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
@@ -272,7 +281,43 @@ app.get("/api/matches", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.get("/api/messages/:memberId", requireAuth, requireActiveSubscription, async (req, res, next) => {
+
+async function validateCallPair(me, other) {
+  if (String(me) === String(other)) return false;
+  const [match, blocked] = await Promise.all([
+    pool.query("SELECT 1 FROM matches WHERE (member_a=$1 AND member_b=$2) OR (member_a=$2 AND member_b=$1)", [me, other]),
+    pool.query("SELECT 1 FROM member_blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1)", [me, other])
+  ]);
+  return !!match.rowCount && !blocked.rowCount;
+}
+app.get("/api/call-signals", requireAuth, requireActiveSubscription, async (req, res, next) => {
+  try {
+    const since = /^\d+$/.test(String(req.query.since || "0")) ? String(req.query.since || "0") : "0";
+    const r = await pool.query(
+      "SELECT id,call_id,from_member,to_member,signal_type,payload,created_at FROM call_signals WHERE to_member=$1 AND id>$2 AND created_at > now() - interval '10 minutes' ORDER BY id ASC LIMIT 100",
+      [req.session.memberId, since]
+    );
+    res.json({ signals: r.rows });
+  } catch (err) { next(err); }
+});
+app.post("/api/call-signals", requireAuth, requireActiveSubscription, async (req, res, next) => {
+  try {
+    const { callId, toMember, type, payload } = req.body || {};
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(callId || "")) ||
+        !/^\d+$/.test(String(toMember || "")) || !["offer","answer","ice","end"].includes(type)) {
+      return res.status(400).json({ error: "Invalid video call signal." });
+    }
+    const data = payload && typeof payload === "object" ? JSON.stringify(payload) : "{}";
+    if (data.length > 20000) return res.status(413).json({ error: "Call signal is too large." });
+    if (!(await validateCallPair(req.session.memberId, toMember))) return res.status(403).json({ error: "Video calls are only available between unblocked mutual matches." });
+    const r = await pool.query(
+      "INSERT INTO call_signals(call_id,from_member,to_member,signal_type,payload) VALUES($1,$2,$3,$4,$5::jsonb) RETURNING id",
+      [callId, req.session.memberId, toMember, type, data]
+    );
+    res.status(201).json({ ok: true, id: r.rows[0].id });
+  } catch (err) { next(err); }
+});
+\napp.get("/api/messages/:memberId", requireAuth, requireActiveSubscription, async (req, res, next) => {
   try {
     const me = String(req.session.memberId), other = String(req.params.memberId);
     const match = await pool.query("SELECT 1 FROM matches WHERE (member_a=$1 AND member_b=$2) OR (member_a=$2 AND member_b=$1)", [me,other]);
