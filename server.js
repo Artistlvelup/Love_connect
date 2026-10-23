@@ -128,6 +128,7 @@ async function initDb() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
+  await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS photo_data BYTEA, ADD COLUMN IF NOT EXISTS photo_type TEXT");
 }
 
 function requireAuth(req, res, next) {
@@ -147,7 +148,7 @@ async function requireActiveSubscription(req, res, next) {
   } catch (err) { next(err); }
 }
 function publicMember(row) {
-  return { id: row.id, displayName: row.display_name, country: row.country, bio: row.bio, lookingFor: row.looking_for };
+  return { id: row.id, displayName: row.display_name, country: row.country, bio: row.bio, lookingFor: row.looking_for, photoUrl: "/api/members/" + row.id + "/photo" };
 }
 function validAdultDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) return false;
@@ -262,7 +263,32 @@ app.get("/api/subscription", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.post("/api/auth/register", async (req, res, next) => {
+app.post("/api/me/photo", requireAuth, (req, res, next) => {
+  const photoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 512 * 1024, files: 1 }, fileFilter: (_req, file, cb) => {
+    if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) return cb(null, true);
+    cb(new Error("Choose a JPG, PNG, or WebP photo."));
+  }}).single("photo");
+  photoUpload(req, res, async err => {
+    if (err) return res.status(400).json({ error: err.code === "LIMIT_FILE_SIZE" ? "Photo must be 512 KB or smaller." : (err.message || "Photo upload failed.") });
+    if (!req.file) return res.status(400).json({ error: "Choose a JPG, PNG, or WebP photo." });
+    try {
+      await pool.query("UPDATE members SET photo_data=$1,photo_type=$2 WHERE id=$3", [req.file.buffer, req.file.mimetype, req.session.memberId]);
+      res.json({ saved: true });
+    } catch (e) { next(e); }
+  });
+});
+app.get("/api/members/:memberId/photo", requireAuth, async (req, res, next) => {
+  try {
+    const blocked = await pool.query("SELECT 1 FROM member_blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1)", [req.session.memberId, req.params.memberId]);
+    if (blocked.rowCount) return res.sendStatus(404);
+    const r = await pool.query("SELECT photo_data,photo_type FROM members WHERE id=$1", [req.params.memberId]);
+    if (!r.rowCount || !r.rows[0].photo_data) return res.sendStatus(404);
+    res.set("Content-Type", r.rows[0].photo_type || "image/webp");
+    res.set("Cache-Control", "private, max-age=300");
+    res.send(r.rows[0].photo_data);
+  } catch (err) { next(err); }
+});
+\napp.post("/api/auth/register", async (req, res, next) => {
   try {
     const { email, password, displayName, birthDate, country } = req.body || {};
     if (!email || !/^\S+@\S+\.\S+$/.test(email) || !password || password.length < 10 ||
