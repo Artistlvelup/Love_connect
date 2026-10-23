@@ -60,6 +60,14 @@ nav button{color:#d8def4}nav button.active,nav button:hover{background:linear-gr
 .empty{background:#f7f8ff;color:#65718a;border-color:#c9d3f0}
 @media(max-width:520px){.top{background:rgba(17,26,50,.96)}}
 
+
+/* Keep the page visually steady: no pulsing, zooming, or moving background */
+html{scroll-behavior:auto!important}
+body{background-attachment:scroll!important}
+*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+button:hover,button:focus,button:active{transform:none!important}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
 </style>
 </head>
 <body>
