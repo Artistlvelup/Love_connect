@@ -288,7 +288,8 @@ app.get("/api/members/:memberId/photo", requireAuth, async (req, res, next) => {
     res.send(r.rows[0].photo_data);
   } catch (err) { next(err); }
 });
-\napp.post("/api/auth/register", async (req, res, next) => {
+
+app.post("/api/auth/register", async (req, res, next) => {
   try {
     const { email, password, displayName, birthDate, country } = req.body || {};
     if (!email || !/^\S+@\S+\.\S+$/.test(email) || !password || password.length < 10 ||
