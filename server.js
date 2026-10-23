@@ -34,7 +34,7 @@ const pool = new Pool({
 
 app.disable("x-powered-by");
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(express.json({ limit: "200kb" }));
+app.use(express.json({ limit: "200kb", verify: (req, _res, buf) => { req.rawBody = Buffer.from(buf); } }));
 app.use(express.urlencoded({ extended: false, limit: "50kb" }));
 app.set("trust proxy", 1);
 app.use(session({
@@ -134,7 +134,7 @@ async function requireActiveSubscription(req, res, next) {
       [req.session.memberId]
     );
     if (!r.rowCount) return res.status(402).json({
-      error: "This is a paid Love Connect feature. Subscribe through the secure payment page to unlock it. Payments are not connected yet."
+      error: "This is a paid Love Connect feature. Choose a subscription plan to unlock it."
     });
     next();
   } catch (err) { next(err); }
@@ -153,6 +153,96 @@ function validAdultDate(value) {
 }
 
 app.get("/api/health", (_req, res) => res.json({ ok: true, service: "Love Connect API" }));
+
+const paidPlans = {
+  monthly: { amount: 200000, days: 30, label: "Monthly" },
+  quarterly: { amount: 500000, days: 90, label: "3 months" },
+  yearly: { amount: 1500000, days: 365, label: "Yearly" }
+};
+function paystackConfigured() { return !!process.env.PAYSTACK_SECRET_KEY; }
+async function paystackRequest(endpoint, body) {
+  const response = await fetch("https://api.paystack.co" + endpoint, {
+    method: body ? "POST" : "GET",
+    headers: { Authorization: "Bearer " + process.env.PAYSTACK_SECRET_KEY, "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.status) throw new Error(data.message || "Paystack request failed.");
+  return data.data;
+}
+async function verifyAndActivatePaystack(reference, expectedMemberId) {
+  if (!paystackConfigured()) throw new Error("Paystack has not been configured by the site administrator.");
+  const tx = await paystackRequest("/transaction/verify/" + encodeURIComponent(reference));
+  const meta = tx.metadata || {};
+  const plan = paidPlans[String(meta.plan_code || "")];
+  if (tx.status !== "success" || tx.currency !== "NGN" || !plan ||
+      Number(tx.amount) !== plan.amount || String(meta.member_id) !== String(expectedMemberId || meta.member_id) ||
+      String(tx.reference) !== String(reference)) {
+    throw new Error("Payment could not be verified against the selected Love Connect plan.");
+  }
+  const memberId = String(meta.member_id || "");
+  if (!/^\d+$/.test(memberId)) throw new Error("Payment is missing a valid member reference.");
+  const existing = await pool.query("SELECT id FROM subscriptions WHERE provider_reference=$1", [reference]);
+  if (existing.rowCount) return;
+  const startsAt = new Date();
+  const endsAt = new Date(startsAt.getTime() + plan.days * 24 * 60 * 60 * 1000);
+  await pool.query(
+    "INSERT INTO subscriptions(member_id,plan_code,status,provider,provider_reference,starts_at,ends_at) VALUES($1,$2,'active','paystack',$3,$4,$5) ON CONFLICT(provider_reference) DO NOTHING",
+    [memberId, meta.plan_code, reference, startsAt.toISOString(), endsAt.toISOString()]
+  );
+}
+app.get("/api/payments/paystack/config", (_req, res) => res.json({ configured: paystackConfigured(), currency: "NGN", plans: Object.keys(paidPlans) }));
+app.post("/api/payments/paystack/initialize", requireAuth, async (req, res, next) => {
+  try {
+    if (!paystackConfigured()) return res.status(503).json({ error: "Paystack is not connected yet. The site administrator must add the Paystack secret key in the server's private environment settings." });
+    const planCode = String(req.body?.planCode || "");
+    const plan = paidPlans[planCode];
+    if (!plan) return res.status(400).json({ error: "Choose a valid membership plan." });
+    const member = await pool.query("SELECT email FROM members WHERE id=$1", [req.session.memberId]);
+    if (!member.rowCount) return res.status(401).json({ error: "Please log in again." });
+    const baseUrl = String(process.env.APP_URL || "").replace(/\/$/, "");
+    if (!baseUrl || !/^https:\/\//i.test(baseUrl)) return res.status(503).json({ error: "The site administrator must set APP_URL to the public HTTPS Love Connect website address." });
+    const tx = await paystackRequest("/transaction/initialize", {
+      email: member.rows[0].email,
+      amount: plan.amount,
+      currency: "NGN",
+      callback_url: baseUrl + "/api/payments/paystack/callback",
+      metadata: { member_id: String(req.session.memberId), plan_code: planCode, product: "Love Connect membership" }
+    });
+    res.json({ authorizationUrl: tx.authorization_url, reference: tx.reference });
+  } catch (err) { next(err); }
+});
+app.get("/api/payments/paystack/callback", requireAuth, async (req, res) => {
+  const baseUrl = String(process.env.APP_URL || "/").replace(/\/$/, "");
+  try {
+    const reference = String(req.query.reference || "");
+    if (!reference) throw new Error("No payment reference was returned.");
+    await verifyAndActivatePaystack(reference, req.session.memberId);
+    return res.redirect(baseUrl + "/?payment=success");
+  } catch (err) {
+    console.error("Paystack callback verification failed:", err.message);
+    return res.redirect(baseUrl + "/?payment=not_verified");
+  }
+});
+app.post("/api/payments/paystack/webhook", async (req, res) => {
+  try {
+    const signature = String(req.get("x-paystack-signature") || "");
+    if (!paystackConfigured() || !signature || !req.rawBody) return res.sendStatus(401);
+    const expected = crypto.createHmac("sha512", process.env.PAYSTACK_SECRET_KEY).update(req.rawBody).digest();
+    let supplied;
+    try { supplied = Buffer.from(signature, "hex"); } catch { return res.sendStatus(401); }
+    if (supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) return res.sendStatus(401);
+    const event = req.body || {};
+    if (event.event === "charge.success" && event.data?.reference) {
+      await verifyAndActivatePaystack(String(event.data.reference), event.data.metadata?.member_id);
+    }
+    return res.sendStatus(200);
+  } catch (err) {
+    console.error("Paystack webhook processing failed:", err.message);
+    return res.sendStatus(500);
+  }
+});
+
 app.get("/api/subscription", requireAuth, async (req, res, next) => {
   try {
     const r = await pool.query(
@@ -161,7 +251,7 @@ app.get("/api/subscription", requireAuth, async (req, res, next) => {
     );
     const subscription = r.rows[0] || null;
     const active = !!subscription && subscription.status === "active" && (!subscription.ends_at || new Date(subscription.ends_at) > new Date());
-    res.json({ active, subscription, paidFeatures: ["video_uploads", "private_messaging", "video_calls"], paymentsConnected: false });
+    res.json({ active, subscription, paidFeatures: ["video_uploads", "private_messaging", "video_calls"], paymentsConnected: paystackConfigured() });
   } catch (err) { next(err); }
 });
 
