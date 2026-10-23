@@ -490,6 +490,26 @@ app.post("/api/videos", requireAuth, requireActiveSubscription, (req, res, next)
   });
 });
 
+app.get("/api/video-feed", requireAuth, async (req, res, next) => {
+  try {
+    const r = await pool.query(`
+      SELECT v.id,v.member_id,v.duration_seconds,v.created_at,m.display_name,m.country,m.bio
+      FROM videos v JOIN members m ON m.id=v.member_id
+      WHERE NOT EXISTS (
+        SELECT 1 FROM member_blocks b
+        WHERE (b.blocker_id=$1 AND b.blocked_id=v.member_id)
+           OR (b.blocker_id=v.member_id AND b.blocked_id=$1)
+      )
+      ORDER BY v.created_at DESC LIMIT 50
+    `, [req.session.memberId]);
+    res.json({ videos: r.rows.map(v => ({
+      id: v.id, memberId: v.member_id, displayName: v.display_name,
+      country: v.country, bio: v.bio, durationSeconds: Number(v.duration_seconds),
+      createdAt: v.created_at, videoUrl: "/api/videos/" + v.id
+    })) });
+  } catch (err) { next(err); }
+});
+
 app.get("/api/videos/:id", requireAuth, async (req, res, next) => {
   try {
     const r = await pool.query("SELECT v.filename,v.original_name,v.duration_seconds FROM videos v WHERE v.id=$1 AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=v.member_id) OR (b.blocker_id=v.member_id AND b.blocked_id=$2))", [req.params.id,req.session.memberId]);
