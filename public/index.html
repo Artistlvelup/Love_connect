@@ -68,6 +68,29 @@ body{background-attachment:scroll!important}
 button:hover,button:focus,button:active{transform:none!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
+
+/* Keep the mobile shortcut bar pinned to the screen while the page scrolls */
+@media(max-width:700px){
+  html,body{min-height:100%;transform:none!important}
+  body{padding-bottom:calc(86px + env(safe-area-inset-bottom))!important}
+  #mobileNav.mobile-nav{
+    position:fixed!important;
+    left:0!important;right:0!important;bottom:0!important;top:auto!important;
+    width:100%!important;max-width:none!important;
+    display:flex!important;visibility:visible!important;opacity:1!important;
+    z-index:99999!important;
+    margin:0!important;
+    transform:none!important;
+    border-radius:0!important;
+    padding:8px 4px calc(8px + env(safe-area-inset-bottom))!important;
+    background:rgba(17,26,50,.98)!important;
+    border-top:1px solid rgba(190,201,255,.28)!important;
+    box-shadow:0 -6px 24px rgba(4,8,24,.24)!important;
+  }
+  #mobileNav.mobile-nav button{color:#d8def4!important;transform:none!important;min-height:44px}
+  #mobileNav.mobile-nav button.active{color:#ff789d!important}
+}
+
 </style>
 </head>
 <body>
