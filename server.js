@@ -67,6 +67,14 @@ async function initDb() {
       bio TEXT NOT NULL DEFAULT '', looking_for TEXT NOT NULL DEFAULT 'Connections',
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id BIGSERIAL PRIMARY KEY, member_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      plan_code TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'inactive' CHECK (status IN ('inactive','active','cancelled','expired')),
+      provider TEXT NOT NULL DEFAULT 'paystack', provider_reference TEXT UNIQUE,
+      starts_at TIMESTAMPTZ, ends_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS subscriptions_member_status_idx ON subscriptions(member_id,status,ends_at);
     CREATE TABLE IF NOT EXISTS likes (
       from_member BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
       to_member BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
@@ -110,6 +118,18 @@ function requireAuth(req, res, next) {
   if (!req.session.memberId) return res.status(401).json({ error: "Please log in first." });
   next();
 }
+async function requireActiveSubscription(req, res, next) {
+  try {
+    const r = await pool.query(
+      "SELECT 1 FROM subscriptions WHERE member_id=$1 AND status='active' AND (ends_at IS NULL OR ends_at > now()) ORDER BY created_at DESC LIMIT 1",
+      [req.session.memberId]
+    );
+    if (!r.rowCount) return res.status(402).json({
+      error: "This is a paid Love Connect feature. Subscribe through the secure payment page to unlock it. Payments are not connected yet."
+    });
+    next();
+  } catch (err) { next(err); }
+}
 function publicMember(row) {
   return { id: row.id, displayName: row.display_name, country: row.country, bio: row.bio, lookingFor: row.looking_for };
 }
@@ -124,6 +144,17 @@ function validAdultDate(value) {
 }
 
 app.get("/api/health", (_req, res) => res.json({ ok: true, service: "Love Connect API" }));
+app.get("/api/subscription", requireAuth, async (req, res, next) => {
+  try {
+    const r = await pool.query(
+      "SELECT plan_code,status,starts_at,ends_at FROM subscriptions WHERE member_id=$1 ORDER BY created_at DESC LIMIT 1",
+      [req.session.memberId]
+    );
+    const subscription = r.rows[0] || null;
+    const active = !!subscription && subscription.status === "active" && (!subscription.ends_at || new Date(subscription.ends_at) > new Date());
+    res.json({ active, subscription, paidFeatures: ["video_uploads", "private_messaging", "video_calls"], paymentsConnected: false });
+  } catch (err) { next(err); }
+});
 
 app.post("/api/auth/register", async (req, res, next) => {
   try {
@@ -241,7 +272,7 @@ app.get("/api/matches", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.get("/api/messages/:memberId", requireAuth, async (req, res, next) => {
+app.get("/api/messages/:memberId", requireAuth, requireActiveSubscription, async (req, res, next) => {
   try {
     const me = String(req.session.memberId), other = String(req.params.memberId);
     const match = await pool.query("SELECT 1 FROM matches WHERE (member_a=$1 AND member_b=$2) OR (member_a=$2 AND member_b=$1)", [me,other]);
@@ -255,7 +286,7 @@ app.get("/api/messages/:memberId", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.post("/api/messages/:memberId", requireAuth, async (req, res, next) => {
+app.post("/api/messages/:memberId", requireAuth, requireActiveSubscription, async (req, res, next) => {
   try {
     const me = String(req.session.memberId), other = String(req.params.memberId);
     const body = String(req.body?.body || "").trim();
@@ -269,7 +300,7 @@ app.post("/api/messages/:memberId", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.post("/api/videos", requireAuth, (req, res, next) => {
+app.post("/api/videos", requireAuth, requireActiveSubscription, (req, res, next) => {
   upload.single("video")(req, res, async err => {
     if (err) return res.status(400).json({ error: "Upload rejected. Use MP4, WebM, or MOV video under 40 MB." });
     if (!req.file) return res.status(400).json({ error: "Choose an MP4, WebM, or MOV video." });
