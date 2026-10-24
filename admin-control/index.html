@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Love Connect — Owner Admin</title>
+<style>
+:root{color-scheme:light;--ink:#20253a;--muted:#72788d;--line:#e6e8f0;--paper:#f6f7fb;--white:#fff;--pink:#e34f83;--purple:#6846d8;--green:#18794e;--red:#b42318;--navy:#171a2e}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+.login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 10% 10%,#fce7f0,transparent 35%),radial-gradient(circle at 90% 90%,#e8e2ff,transparent 40%),var(--paper)}
+.login-card{width:min(100%,430px);padding:34px;background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:0 22px 70px #25224414}.brand{display:flex;align-items:center;gap:12px;font-weight:850;letter-spacing:-.4px;font-size:19px}.brand-mark{width:44px;height:44px;display:grid;place-items:center;border-radius:15px;color:#fff;background:linear-gradient(135deg,var(--pink),var(--purple));font-size:22px}.eyebrow{margin:26px 0 5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--purple);font-size:11px;font-weight:850}.login-card h1{margin:0 0 8px;font-size:30px;letter-spacing:-1px}.muted{color:var(--muted)}.field{display:grid;gap:7px;margin:18px 0}.field label{font-weight:750;font-size:13px}.field input{width:100%;border:1px solid #d8dbea;border-radius:12px;padding:13px 14px;outline:none;background:#fff}.field input:focus{border-color:var(--purple);box-shadow:0 0 0 3px #6846d81c}.primary{border:0;border-radius:12px;padding:13px 17px;background:linear-gradient(110deg,var(--purple),#8c4fbd);color:#fff;font-weight:800}.primary:disabled{opacity:.6;cursor:wait}.full{width:100%}.error{margin:12px 0;color:var(--red);font-size:13px}.security-note{margin-top:20px;padding:12px;border-radius:12px;background:#f6f3ff;color:#60538a;font-size:12px}
+.app{min-height:100vh}.topbar{height:74px;position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 26px}.topbar .brand-mark{width:38px;height:38px;border-radius:13px}.top-actions{display:flex;align-items:center;gap:12px}.admin-email{color:var(--muted);font-size:12px}.logout{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-weight:750;color:var(--ink)}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:calc(100vh - 74px)}.sidebar{background:var(--navy);padding:22px 14px;color:#fff}.side-label{padding:10px 12px 8px;color:#a4a8c0;text-transform:uppercase;letter-spacing:1.4px;font-size:10px;font-weight:850}.nav-btn{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border:0;border-radius:11px;background:transparent;color:#c9cbe0;text-align:left;font-weight:700;margin:3px 0}.nav-btn .ico{width:20px;text-align:center;font-size:17px}.nav-btn:hover,.nav-btn.active{background:#ffffff14;color:#fff}.nav-btn.active{box-shadow:inset 3px 0 var(--pink)}.sidebar-note{margin:26px 8px 0;padding:13px;border:1px solid #ffffff1b;border-radius:12px;color:#bfc2d5;font-size:12px}
+main{padding:30px;min-width:0}.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:23px}.page-head h1{font-size:27px;letter-spacing:-.8px;margin:0 0 4px}.page-head p{margin:0;color:var(--muted)}.refresh{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;font-weight:750}
+.stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:22px}.stat{padding:20px;background:#fff;border:1px solid var(--line);border-radius:17px;min-width:0}.stat-head{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-weight:700;font-size:13px}.stat-icon{width:35px;height:35px;border-radius:11px;display:grid;place-items:center;background:#f4efff;color:var(--purple);font-size:17px}.stat-number{font-size:29px;line-height:1.2;font-weight:850;letter-spacing:-1px;margin-top:15px}.stat-foot{margin-top:7px;font-size:12px;color:var(--muted)}.section-card{background:#fff;border:1px solid var(--line);border-radius:17px;margin-bottom:18px;overflow:hidden}.section-top{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}.section-top h2{font-size:16px;margin:0}.section-top p{font-size:12px;color:var(--muted);margin:3px 0 0}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;padding:13px 17px;border-bottom:1px solid #eff0f5;font-size:13px;vertical-align:top}th{background:#fbfbfd;color:#72788d;font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:850;white-space:nowrap}tbody tr:last-child td{border-bottom:0}.cell-main{font-weight:800;color:var(--ink)}.cell-sub{font-size:11px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}.pill{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.35px;background:#f0f1f5;color:#656b7c}.pill.good{background:#e5f6ec;color:var(--green)}.pill.warn{background:#fff2d8;color:#895b00}.pill.bad{background:#ffebe9;color:var(--red)}.row-actions{display:flex;gap:7px;flex-wrap:wrap}.small-btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;font-size:11px;font-weight:800}.small-btn.approve{background:#e9f8ef;color:var(--green);border-color:#c6ecd4}.small-btn.reject{background:#fff0ef;color:var(--red);border-color:#f6d0cc}.toolbar{padding:13px 18px;border-bottom:1px solid var(--line)}.search{width:min(100%,350px);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none}.empty{padding:32px;text-align:center;color:var(--muted)}.notice{padding:14px 16px;border-radius:12px;background:#fff7e8;color:#795619;border:1px solid #f7e2b8;font-size:12px;margin-bottom:20px}.toast{position:fixed;right:20px;bottom:20px;max-width:min(420px,calc(100vw - 40px));padding:13px 17px;border-radius:12px;background:#20253a;color:#fff;box-shadow:0 10px 35px #0002;z-index:10}.footer-note{color:var(--muted);font-size:11px;padding:4px 0 20px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{padding:8px;display:flex;gap:5px;overflow:auto;position:sticky;top:74px;z-index:4}.side-label,.sidebar-note{display:none}.nav-btn{white-space:nowrap;width:auto;flex:0 0 auto;margin:0;padding:10px}.nav-btn .ico{width:auto}.nav-btn span:last-child{font-size:12px}.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:22px}}
+@media(max-width:560px){.topbar{padding:0 14px;height:66px}.topbar .brand{font-size:15px}.topbar .brand-mark{width:34px;height:34px}.admin-email{display:none}.layout{min-height:calc(100vh - 66px)}.sidebar{top:66px}.nav-btn{padding:9px}.nav-btn .ico{display:none}main{padding:17px 12px}.page-head h1{font-size:23px}.stat-grid{gap:9px}.stat{padding:13px}.stat-number{font-size:25px}.stat-head{font-size:11px}.stat-icon{width:29px;height:29px}.login-card{padding:25px 21px}}
+</style>
+</head>
+<body>
+<div id="loginView" class="login-wrap">
+  <form id="loginForm" class="login-card">
+    <div class="brand"><span class="brand-mark">♥</span><span>LOVE CONNECT <span style="color:var(--purple)">ADMIN</span></span></div>
+    <div class="eyebrow">Private owner access</div>
+    <h1>Welcome back.</h1>
+    <p class="muted">Sign in to manage the Love Connect platform. This control panel is separate from the public website.</p>
+    <div class="field"><label for="email">Owner email</label><input id="email" type="email" autocomplete="username" required placeholder="Your admin email"></div>
+    <div class="field"><label for="password">Admin password</label><input id="password" type="password" autocomplete="current-password" required placeholder="Enter your admin password"></div>
+    <button id="loginButton" class="primary full" type="submit">Sign in securely</button>
+    <div id="loginError" class="error" role="alert"></div>
+    <div class="security-note">Private dashboard · Owner-only access · Sessions expire after 6 hours. Do not share your password.</div>
+  </form>
+</div>
+<div id="appView" class="app hidden">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">♥</span><span>LOVE CONNECT <span style="color:var(--purple)">ADMIN</span></span></div>
+    <div class="top-actions"><span id="adminEmail" class="admin-email"></span><button id="logoutButton" class="logout" type="button">Sign out</button></div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-label">Control centre</div>
+      <button class="nav-btn active" data-page="overview"><span class="ico">▦</span><span>Overview</span></button>
+      <button class="nav-btn" data-page="members"><span class="ico">♙</span><span>Members</span></button>
+      <button class="nav-btn" data-page="campaigns"><span class="ico">▤</span><span>Ad campaigns</span></button>
+      <button class="nav-btn" data-page="reports"><span class="ico">⚑</span><span>Safety reports</span></button>
+      <button class="nav-btn" data-page="subscriptions"><span class="ico">₦</span><span>Subscriptions</span></button>
+      <button class="nav-btn" data-page="videos"><span class="ico">▷</span><span>Video uploads</span></button>
+      <div class="sidebar-note">This admin site connects to Love Connect’s existing database through protected server APIs. It is not part of the public menu.</div>
+    </aside>
+    <main>
+      <div id="page-overview" class="page">
+        <div class="page-head"><div><h1>Platform overview</h1><p>A live snapshot of your Love Connect system.</p></div><button class="refresh" data-refresh>↻ Refresh</button></div>
+        <div id="overviewStats" class="stat-grid"><div class="empty">Loading platform data…</div></div>
+        <div class="notice">Review member activity, paid advertising, subscriptions and safety reports here. Sensitive account actions such as deleting members are intentionally not enabled in this first version.</div>
+        <div class="section-card"><div class="section-top"><div><h2>Campaigns needing review</h2><p>Paid adverts wait here after payment until you approve them.</p></div><button class="small-btn" data-go="campaigns">Open campaigns →</button></div><div id="pendingCampaigns" class="empty">Loading campaigns…</div></div>
+        <div class="section-card"><div class="section-top"><div><h2>Latest safety reports</h2><p>Reports submitted by members.</p></div><button class="small-btn" data-go="reports">Open reports →</button></div><div id="latestReports" class="empty">Loading reports…</div></div>
+      </div>
+      <div id="page-members" class="page hidden"><div class="page-head"><div><h1>Members</h1><p>Registered Love Connect accounts. Passwords are never shown here.</p></div><button class="refresh" data-refresh>↻ Refresh</button></div><div class="section-card"><div class="toolbar"><input id="memberSearch" class="search" type="search" placeholder="Search name, email or country"></div><div id="membersTable" class="empty">Loading members…</div></div></div>
+      <div id="page-campaigns" class="page hidden"><div class="page-head"><div><h1>Advertising campaigns</h1><p>Review direct paid campaigns, payment status and results.</p></div><button class="refresh" data-refresh>↻ Refresh</button></div><div class="section-card"><div class="toolbar"><input id="campaignSearch" class="search" type="search" placeholder="Search business, title or advertiser"></div><div id="campaignsTable" class="empty">Loading campaigns…</div></div></div>
+      <div id="page-reports" class="page hidden"><div class="page-head"><div><h1>Safety reports</h1><p>Review reports submitted about members. No automatic punishment is applied.</p></div><button class="refresh" data-refresh>↻ Refresh</button></div><div class="section-card"><div id="reportsTable" class="empty">Loading reports…</div></div></div>
+      <div id="page-subscriptions" class="page hidden"><div class="page-head"><div><h1>Subscriptions</h1><p>Membership records and their current status.</p></div><button class="refresh" data-refresh>↻ Refresh</button></div><div class="section-card"><div class="toolbar"><input id="subscriptionSearch" class="search" type="search" placeholder="Search member, plan or status"></div><div id="subscriptionsTable" class="empty">Loading subscriptions…</div></div></div>
+      <div id="page-videos" class="page hidden"><div class="page-head"><div><h1>Video uploads</h1><p>Uploaded video records and the accounts that submitted them.</p></div><button class="refresh" data-refresh>↻ Refresh</button></div><div class="section-card"><div id="videosTable" class="empty">Loading videos…</div></div></div>
+      <div class="footer-note">Love Connect private owner console · Access is logged through protected API authentication.</div>
+    </main>
+  </div>
+</div>
+<div id="toast" class="toast hidden" role="status"></div>
+<script>
+(function(){
+  "use strict";
+  const API = "https://love-connect9.onrender.com/api/admin-control";
+  const $ = id => document.getElementById(id);
+  let token = sessionStorage.getItem("lc_admin_token") || "";
+  let adminEmail = sessionStorage.getItem("lc_admin_email") || "";
+  let currentPage = "overview";
+  let dataCache = {members:[],campaigns:[],reports:[],subscriptions:[],videos:[]};
+  let toastTimer;
+  function esc(value){return String(value == null ? "" : value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
+  function date(value){if(!value)return "—";const d=new Date(value);return Number.isNaN(d.getTime())?"—":d.toLocaleString();}
+  function naira(kobo){const n=Number(kobo||0)/100;return "₦"+n.toLocaleString("en-NG",{maximumFractionDigits:2});}
+  function pill(status){const s=String(status||"unknown");let cls="";if(["approved","active","paid"].includes(s))cls="good";else if(["pending_review","awaiting_payment","inactive"].includes(s))cls="warn";else if(["rejected","cancelled","expired"].includes(s))cls="bad";return '<span class="pill '+cls+'">'+esc(s.replaceAll("_"," "))+"</span>";}
+  function showToast(message){$("toast").textContent=message;$("toast").classList.remove("hidden");clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.add("hidden"),3500);}
+  function showLogin(message){$("loginView").classList.remove("hidden");$("appView").classList.add("hidden");$("loginError").textContent=message||"";}
+  function showApp(){ $("loginView").classList.add("hidden");$("appView").classList.remove("hidden");$("adminEmail").textContent=adminEmail; }
+  async function request(path,options={}){
+    const headers=Object.assign({"Content-Type":"application/json"},options.headers||{});
+    if(token)headers.Authorization="Bearer "+token;
+    let response;
+    try{response=await fetch(API+path,Object.assign({},options,{headers,cache:"no-store"}));}
+    catch(e){throw new Error("Cannot reach Love Connect server. It may be waking up; wait a moment and try again.");}
+    let body={};try{body=await response.json();}catch(e){}
+    if(response.status===401&&path!=="/login"){signOut(false);throw new Error("Your admin session expired. Please sign in again.");}
+    if(!response.ok)throw new Error(body.error||"Request failed ("+response.status+").");
+    return body;
+  }
+  function signOut(show=true){token="";adminEmail="";sessionStorage.removeItem("lc_admin_token");sessionStorage.removeItem("lc_admin_email");showLogin("");if(show)showToast("You have signed out.");}
+  async function signIn(event){
+    event.preventDefault();$("loginError").textContent="";$("loginButton").disabled=true;$("loginButton").textContent="Signing in…";
+    try{const result=await request("/login",{method:"POST",body:JSON.stringify({email:$("email").value.trim(),password:$("password").value})});token=result.token;adminEmail=result.email;sessionStorage.setItem("lc_admin_token",token);sessionStorage.setItem("lc_admin_email",adminEmail);$("password").value="";showApp();await loadPage("overview");}
+    catch(e){$("loginError").textContent=e.message;}
+    finally{$("loginButton").disabled=false;$("loginButton").textContent="Sign in securely";}
+  }
+  function stat(title,value,sub,icon){return '<div class="stat"><div class="stat-head"><span>'+esc(title)+'</span><span class="stat-icon">'+icon+'</span></div><div class="stat-number">'+esc(value)+'</div><div class="stat-foot">'+esc(sub)+'</div></div>';}
+  function renderOverview(d){
+    $("overviewStats").innerHTML=[
+      stat("Registered members",Number(d.members.total).toLocaleString(),Number(d.members.new_week).toLocaleString()+" new in the last 7 days","♙"),
+      stat("Active subscriptions",Number(d.subscriptions.active).toLocaleString(),Number(d.subscriptions.total).toLocaleString()+" total subscription records","₦"),
+      stat("Pending ad campaigns",Number(d.campaigns.pending).toLocaleString(),Number(d.campaigns.total).toLocaleString()+" campaigns in the system","▤"),
+      stat("Paid campaign value",naira(d.campaigns.paid_kobo),Number(d.campaigns.active).toLocaleString()+" currently active campaigns","↗"),
+      stat("Safety reports",Number(d.reports.total).toLocaleString(),"Reports submitted by members","⚑"),
+      stat("Video uploads",Number(d.videos.total).toLocaleString(),Number(d.messages.total).toLocaleString()+" messages in the system","▷")
+    ].join("");
+  }
+  function table(headers,rows){if(!rows.length)return '<div class="empty">No records found.</div>';return '<div class="table-wrap"><table><thead><tr>'+headers.map(h=>"<th>"+h+"</th>").join("")+'</tr></thead><tbody>'+rows.join("")+"</tbody></table></div>";}
+  function renderMembers(){
+    const q=($("memberSearch")?.value||"").toLowerCase();
+    const rows=dataCache.members.filter(m=>[m.display_name,m.email,m.country].some(v=>String(v||"").toLowerCase().includes(q))).map(m=>"<tr><td><div class=\"cell-main\">"+esc(m.display_name)+"</div><div class=\"cell-sub\">Member #"+esc(m.id)+"</div></td><td>"+esc(m.email)+"</td><td>"+esc(m.country||"—")+"</td><td>"+(m.has_active_subscription?'<span class="pill good">Active plan</span>':'<span class="pill">Free / inactive</span>')+"</td><td>"+esc(date(m.created_at))+"</td></tr>");
+    $("membersTable").innerHTML=table(["Member","Email","Country","Membership","Joined"],rows);
+  }
+  function campaignRows(list,compact){
+    return list.map(c=>"<tr><td><div class=\"cell-main\">"+esc(c.business_name)+"</div><div class=\"cell-sub\">"+esc(c.campaign_title)+"</div></td><td><div>"+esc(c.advertiser_email)+"</div><div class=\"cell-sub\">"+esc(c.package_code)+" · "+esc(c.duration_days)+" days</div></td><td>"+naira(c.amount_kobo)+"<div class=\"cell-sub\">"+(c.paid_at?"Paid "+esc(date(c.paid_at)):"Payment not recorded")+"</div></td><td>"+pill(c.status)+"</td><td>"+esc(c.impressions)+" views · "+esc(c.clicks)+" clicks</td><td>"+(c.status==="pending_review"?'<div class="row-actions"><button class="small-btn approve" data-campaign="'+esc(c.id)+'" data-status="approved">Approve</button><button class="small-btn reject" data-campaign="'+esc(c.id)+'" data-status="rejected">Reject</button></div>':esc(date(c.created_at)))+"</td></tr>");
+  }
+  function renderCampaigns(){
+    const q=($("campaignSearch")?.value||"").toLowerCase();
+    const filtered=dataCache.campaigns.filter(c=>[c.business_name,c.campaign_title,c.advertiser_email,c.status].some(v=>String(v||"").toLowerCase().includes(q)));
+    $("campaignsTable").innerHTML=table(["Business / campaign","Advertiser / package","Amount","Status","Performance","Action / date"],campaignRows(filtered,false));
+    const pending=dataCache.campaigns.filter(c=>c.status==="pending_review").slice(0,5);
+    $("pendingCampaigns").innerHTML=table(["Business / campaign","Amount","Status","Action / date"],pending.map(c=>"<tr><td><div class=\"cell-main\">"+esc(c.business_name)+"</div><div class=\"cell-sub\">"+esc(c.campaign_title)+" · "+esc(c.advertiser_email)+"</div></td><td>"+naira(c.amount_kobo)+"</td><td>"+pill(c.status)+"</td><td><div class=\"row-actions\"><button class=\"small-btn approve\" data-campaign=\""+esc(c.id)+"\" data-status=\"approved\">Approve</button><button class=\"small-btn reject\" data-campaign=\""+esc(c.id)+"\" data-status=\"rejected\">Reject</button></div></td></tr>"));
+  }
+  function reportRows(list){return list.map(r=>"<tr><td><div class=\"cell-main\">#"+esc(r.id)+" · "+esc(r.reason)+"</div><div class=\"cell-sub\">"+esc(date(r.created_at))+"</div></td><td><div class=\"cell-main\">"+esc(r.reporter_name)+"</div><div class=\"cell-sub\">"+esc(r.reporter_email)+"</div></td><td><div class=\"cell-main\">"+esc(r.reported_name)+"</div><div class=\"cell-sub\">"+esc(r.reported_email)+"</div></td><td style=\"min-width:220px;white-space:pre-wrap\">"+esc(r.details||"No extra details provided.")+"</td></tr>");}
+  function renderReports(){
+    $("reportsTable").innerHTML=table(["Report","Reported by","Member reported","Details"],reportRows(dataCache.reports));
+    $("latestReports").innerHTML=dataCache.reports.length?table(["Report","Member reported","Details"],dataCache.reports.slice(0,4).map(r=>"<tr><td><div class=\"cell-main\">"+esc(r.reason)+"</div><div class=\"cell-sub\">"+esc(date(r.created_at))+"</div></td><td><div class=\"cell-main\">"+esc(r.reported_name)+"</div><div class=\"cell-sub\">"+esc(r.reported_email)+"</div></td><td>"+esc(r.details||"—")+"</td></tr>")):'<div class="empty">No safety reports yet.</div>';
+  }
+  function renderSubscriptions(){
+    const q=($("subscriptionSearch")?.value||"").toLowerCase();
+    const list=dataCache.subscriptions.filter(s=>[s.display_name,s.email,s.plan_code,s.status,s.provider_reference].some(v=>String(v||"").toLowerCase().includes(q)));
+    $("subscriptionsTable").innerHTML=table(["Member","Plan","Status","Provider / reference","Start / end","Created"],list.map(s=>"<tr><td><div class=\"cell-main\">"+esc(s.display_name)+"</div><div class=\"cell-sub\">"+esc(s.email)+"</div></td><td>"+esc(s.plan_code)+"</td><td>"+pill(s.status)+"</td><td>"+esc(s.provider||"—")+"<div class=\"cell-sub\">"+esc(s.provider_reference||"—")+"</div></td><td>"+esc(date(s.starts_at))+"<div class=\"cell-sub\">Until "+esc(date(s.ends_at))+"</div></td><td>"+esc(date(s.created_at))+"</td></tr>"));
+  }
+  function renderVideos(){
+    $("videosTable").innerHTML=table(["Video","Member","Country","Duration","Uploaded"],dataCache.videos.map(v=>"<tr><td><div class=\"cell-main\">"+esc(v.original_name||("Video #"+v.id))+"</div><div class=\"cell-sub\">Video #"+esc(v.id)+"</div></td><td><div class=\"cell-main\">"+esc(v.display_name)+"</div><div class=\"cell-sub\">"+esc(v.email)+"</div></td><td>"+esc(v.country||"—")+"</td><td>"+esc(v.duration_seconds)+" sec</td><td>"+esc(date(v.created_at))+"</td></tr>"));
+  }
+  async function loadPage(page){
+    currentPage=page;document.querySelectorAll(".page").forEach(el=>el.classList.add("hidden"));$("page-"+page).classList.remove("hidden");document.querySelectorAll(".nav-btn").forEach(el=>el.classList.toggle("active",el.dataset.page===page));
+    try{
+      if(page==="overview"){const [d,c,r]=await Promise.all([request("/overview"),request("/campaigns"),request("/reports")]);renderOverview(d);dataCache.campaigns=c.campaigns;dataCache.reports=r.reports;renderCampaigns();renderReports();}
+      if(page==="members"){const d=await request("/members");dataCache.members=d.members;renderMembers();}
+      if(page==="campaigns"){const d=await request("/campaigns");dataCache.campaigns=d.campaigns;renderCampaigns();}
+      if(page==="reports"){const d=await request("/reports");dataCache.reports=d.reports;renderReports();}
+      if(page==="subscriptions"){const d=await request("/subscriptions");dataCache.subscriptions=d.subscriptions;renderSubscriptions();}
+      if(page==="videos"){const d=await request("/videos");dataCache.videos=d.videos;renderVideos();}
+    }catch(e){showToast(e.message);if(!token)showLogin(e.message);}
+  }
+  async function reviewCampaign(id,status){
+    const verb=status==="approved"?"approve":"reject";
+    if(!confirm("Are you sure you want to "+verb+" this paid advert?"))return;
+    try{await request("/campaigns/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify({status})});showToast("Campaign "+verb+"d.");await loadPage(currentPage);}
+    catch(e){showToast(e.message);}
+  }
+  $("loginForm").addEventListener("submit",signIn);
+  $("logoutButton").addEventListener("click",()=>signOut(true));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>loadPage(b.dataset.page)));
+  document.querySelectorAll("[data-refresh]").forEach(b=>b.addEventListener("click",()=>loadPage(currentPage)));
+  document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>loadPage(b.dataset.go)));
+  document.addEventListener("click",e=>{const b=e.target.closest("[data-campaign]");if(b)reviewCampaign(b.dataset.campaign,b.dataset.status);});
+  $("memberSearch").addEventListener("input",renderMembers);
+  $("campaignSearch").addEventListener("input",renderCampaigns);
+  $("subscriptionSearch").addEventListener("input",renderSubscriptions);
+  if(token&&adminEmail){showApp();loadPage("overview");}else showLogin("");
+})();
+</script>
+</body>
+</html>
