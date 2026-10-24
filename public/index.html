@@ -295,7 +295,7 @@ button.soft{background:#454064!important;color:#f1eaff!important}
 
 </section>
 <div id="app" class="layout hidden">
-<section><div id="page-discover" class="page"><div class="discover-toolbar"><input id="peopleSearch" class="discover-search" type="search" placeholder="Search people, interests…"><button class="post-video-btn" id="topPostVideo">＋ Post video</button></div><div class="discover-heading"><h1>Your world, your people</h1><p>Discover people and connect.</p></div><div class="filter-row" id="discoverFilters"><button class="filter-chip active" data-filter="all">For you</button><button class="filter-chip" data-filter="nearby">Nearby</button><button class="filter-chip" data-filter="new">New people</button><button class="filter-chip" data-filter="interests">Shared interests</button></div><div class="story-row" id="storyRow"><div class="story"><div class="story-ring"><span>＋</span></div>Your story</div></div><section class="panel" id="myDiscoverPosts" style="margin:12px 0 18px"><h2 class="section-title">Your profile & posts</h2><p class="small muted">Your profile photos and videos will appear here so you can check what other members can see.</p><div id="myDiscoverPhotos" class="photo-gallery" aria-label="Your posted photos"><p class="small muted">Loading your photos…</p></div><div id="myDiscoverVideos" class="video-feed-list" style="margin-top:12px"><p class="small muted">Loading your videos…</p></div><button class="soft" id="myDiscoverPostVideo" type="button" style="margin-top:10px">＋ Post a video</button></section><div id="feed" class="feed"></div><div class="actions" style="margin:18px 0"><button class="soft" id="refreshFeed">↻ Refresh people</button></div></div>
+<section><div id="page-discover" class="page"><div class="discover-toolbar"><input id="peopleSearch" class="discover-search" type="search" placeholder="Search people, interests…"><button class="post-video-btn" id="topPostVideo">＋ Post video</button></div><div class="discover-heading"><h1>Your world, your people</h1><p>Discover people and connect.</p></div><div class="filter-row" id="discoverFilters"><button class="filter-chip active" data-filter="all">For you</button><button class="filter-chip" data-filter="nearby">Nearby</button><button class="filter-chip" data-filter="new">New people</button><button class="filter-chip" data-filter="interests">Shared interests</button></div><div class="story-row" id="storyRow" aria-label="Stories"><button type="button" class="story" id="addStoryButton" style="border:0;background:transparent;color:inherit;cursor:pointer;padding:0"><span class="story-ring"><span>＋</span></span><span>Your story</span></button><span class="small muted" id="storyStatus" aria-live="polite">Loading stories…</span></div><section class="panel" id="myDiscoverPosts" style="margin:12px 0 18px"><h2 class="section-title">Your profile & posts</h2><p class="small muted">Your profile photos and videos will appear here so you can check what other members can see.</p><div id="myDiscoverPhotos" class="photo-gallery" aria-label="Your posted photos"><p class="small muted">Loading your photos…</p></div><div id="myDiscoverVideos" class="video-feed-list" style="margin-top:12px"><p class="small muted">Loading your videos…</p></div><button class="soft" id="myDiscoverPostVideo" type="button" style="margin-top:10px">＋ Post a video</button></section><div id="feed" class="feed"></div><div class="actions" style="margin:18px 0"><button class="soft" id="refreshFeed">↻ Refresh people</button></div></div>
 <div id="page-video" class="page hidden"><div class="discover-heading"><h1>Moments from your world</h1><p>Short videos. New connections.</p></div><div class="panel" style="margin-bottom:14px"><button class="primary" id="uploadToggle">＋ Post video</button><form id="uploadForm" class="hidden" style="margin-top:14px"><div class="field"><label for="video">Portrait video (up to 30 seconds)</label><input id="video" type="file" accept="video/mp4,video/webm,video/quicktime"></div><p id="videoCheck" class="small muted">Choose a video to check its length before uploading.</p><button class="primary" type="submit">Upload video</button></form></div><div id="videoFeed" class="video-feed-list"></div><div class="panel ad-space" style="margin-top:18px"><span class="pill">SPONSORED</span><h3 class="section-title">Advertise with Love Connect</h3><p class="small muted">Example placement only. Paid ads will appear when an ad network or advertiser campaign is connected.</p><button class="soft" id="goAdvertise">Why this ad? · Advertising information</button></div></div><div id="page-advertise" class="page hidden">
 <section class="panel advertise-panel">
   <div class="ad-heading">
@@ -533,5 +533,63 @@ $("acceptCall").onclick=acceptIncomingCall;$("endCall").onclick=()=>cleanupCall(
 async function signOutAndReset(){if(pc)await cleanupCall(true);if(signalTimer){clearInterval(signalTimer);signalTimer=null}if(chatRefreshTimer){clearInterval(chatRefreshTimer);chatRefreshTimer=null}chatMember=null;try{await api("/api/auth/logout",{method:"POST",body:"{}"})}catch{}location.reload()}
 async function switchAccount(){await signOutAndReset()}
 async function logout(){await signOutAndReset()}
-const passwordToggle=$("togglePassword");passwordToggle.onclick=()=>{const show=$("password").type==="password";$("password").type=show?"text":"password";passwordToggle.setAttribute("aria-label",show?"Hide password":"Show password");passwordToggle.setAttribute("title",show?"Hide password":"Show password");passwordToggle.setAttribute("aria-pressed",String(show));passwordToggle.innerHTML=show?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8"/><path d="M9.9 5.2A10.8 10.8 0 0112 5c6.4 0 10 7 10 7a15.6 15.6 0 01-3.1 3.9M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1.2 0 2.3-.2 3.3-.6"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>'};authMode(true);checkSession();
+const passwordToggle=$("togglePassword");passwordToggle.onclick=()=>{const show=$("password").type==="password";$("password").type=show?"text":"password";passwordToggle.setAttribute("aria-label",show?"Hide password":"Show password");passwordToggle.setAttribute("title",show?"Hide password":"Show password");passwordToggle.setAttribute("aria-pressed",String(show));passwordToggle.innerHTML=show?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8"/><path d="M9.9 5.2A10.8 10.8 0 0112 5c6.4 0 10 7 10 7a15.6 15.6 0 01-3.1 3.9M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1.2 0 2.3-.2 3.3-.6"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>'};
+async function loadStories(){
+ const row=$("storyRow"),status=$("storyStatus");if(!row||!me)return;
+ try{
+  const d=await api("/api/stories");
+  row.querySelectorAll("[data-story-id]").forEach(n=>n.remove());
+  const stories=d.stories||[];
+  const byMember=new Map();
+  for(const story of stories){if(!byMember.has(String(story.memberId)))byMember.set(String(story.memberId),story);}
+  const mine=byMember.get(String(me.id));
+  const add=$("addStoryButton");
+  if(add){const label=add.querySelector("span:last-child");if(label)label.textContent=mine?"Your story · Add":"Your story";}
+  for(const story of byMember.values()){
+   const b=document.createElement("button");b.type="button";b.className="story";b.dataset.storyId=String(story.id);b.style.cssText="border:0;background:transparent;color:inherit;cursor:pointer;padding:0";
+   const ring=document.createElement("span");ring.className="story-ring";
+   const inner=document.createElement("span");
+   const img=document.createElement("img");img.src=story.imageUrl;img.alt="";img.style.cssText="width:100%;height:100%;object-fit:cover;border-radius:50%";inner.appendChild(img);ring.appendChild(inner);
+   const caption=document.createElement("span");caption.textContent=String(story.memberId)===String(me.id)?"Your story":story.displayName;
+   b.append(ring,caption);row.appendChild(b);b.addEventListener("click",()=>openStoryViewer(story));
+  }
+  if(status)status.textContent=stories.length?"":"No stories yet";
+ }catch(e){if(status)status.textContent="Stories unavailable";console.error("Could not load stories",e);}
+}
+function openStoryViewer(story){
+ document.getElementById("storyViewer")?.remove();
+ const overlay=document.createElement("div");overlay.id="storyViewer";overlay.setAttribute("role","dialog");overlay.setAttribute("aria-modal","true");
+ overlay.style.cssText="position:fixed;inset:0;z-index:10000;background:rgba(8,10,20,.94);display:flex;align-items:center;justify-content:center;padding:16px";
+ const card=document.createElement("div");card.style.cssText="position:relative;width:min(100%,430px);height:min(82vh,760px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px";
+ const head=document.createElement("div");head.style.cssText="display:flex;align-items:center;justify-content:space-between;width:100%;color:white;font-weight:700";
+ const name=document.createElement("span");name.textContent=story.displayName||"Story";
+ const close=document.createElement("button");close.type="button";close.textContent="✕ Close";close.style.cssText="border:0;border-radius:12px;padding:10px 14px;background:#303953;color:white";close.onclick=()=>overlay.remove();head.append(name,close);
+ const img=document.createElement("img");img.src=story.imageUrl+"?fresh="+Date.now();img.alt="Story by "+(story.displayName||"member");img.style.cssText="width:100%;height:calc(100% - 50px);object-fit:contain;border-radius:16px";
+ const time=document.createElement("p");time.textContent="Stories disappear after 24 hours.";time.style.cssText="color:#ddd;font-size:12px;margin:0";
+ card.append(head,img,time);overlay.appendChild(card);overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove()});document.body.appendChild(overlay);
+ const esc=e=>{if(e.key==="Escape"){overlay.remove();document.removeEventListener("keydown",esc)}};document.addEventListener("keydown",esc);
+}
+if($("addStoryButton"))$("addStoryButton").onclick=()=>{
+ if(!me){say("Please log in to post a story.",true);return;}
+ const picker=document.createElement("input");picker.type="file";picker.accept="image/jpeg,image/png,image/webp";picker.style.display="none";document.body.appendChild(picker);
+ picker.onchange=async()=>{
+  const file=picker.files&&picker.files[0];picker.remove();if(!file)return;
+  if(file.size>8*1024*1024){say("Choose a photo smaller than 8 MB. It will be resized before upload.",true);return;}
+  const status=$("storyStatus");if(status)status.textContent="Uploading story…";
+  try{
+   const blob=await compressPhoto(file);
+   if(blob.size>512*1024)throw new Error("This image is too large after resizing. Choose another photo.");
+   const fd=new FormData();fd.append("story",blob,"story.webp");
+   const response=await fetch("/api/stories",{method:"POST",body:fd,credentials:"same-origin"});
+   const result=await response.json().catch(()=>({}));
+   if(!response.ok)throw new Error(result.error||"Story upload failed.");
+   if(status)status.textContent="Story posted";
+   await loadStories();say("Your story is posted and will disappear after 24 hours.");
+  }catch(e){if(status)status.textContent="";say(e.message||"Could not upload story.",true);}
+ };
+ picker.click();
+};
+
+loadStories();
+authMode(true);checkSession();
 </script></body></html>
