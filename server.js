@@ -725,15 +725,15 @@ function verifyAdminToken(token) {
 }
 function requireAdminControl(req, res, next) {
   const header = String(req.get("authorization") || "");
-  const match = header.match(/^Bearer\\s+(.+)$/i);
+  const match = header.match(/^Bearer\s+(.+)$/i);
   const payload = verifyAdminToken(match && match[1]);
   if (!payload) return res.status(401).json({ error: "Admin session expired. Sign in again." });
   req.adminControl = payload;
   next();
 }
 app.use("/api/admin-control", (req, res, next) => {
-  const allowedOrigin = String(process.env.ADMIN_CONTROL_ORIGIN || "").replace(/\\/+$/, "");
-  const origin = String(req.get("origin") || "").replace(/\\/+$/, "");
+  const allowedOrigin = String(process.env.ADMIN_CONTROL_ORIGIN || "").replace(/\/+$/, "");
+  const origin = String(req.get("origin") || "").replace(/\/+$/, "");
   if (!allowedOrigin || !origin || origin !== allowedOrigin) {
     return res.status(403).json({ error: "Admin Control website origin is not configured." });
   }
