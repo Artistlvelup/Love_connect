@@ -278,6 +278,75 @@ body{color:#edf0ff}
 button.soft{background:#454064!important;color:#f1eaff!important}
 @media(max-width:700px){.mobile-nav,#mobileNav.mobile-nav{background:rgba(25,34,57,.98)!important}}
 
+
+/* Badoo/Tinder-inspired mobile discovery: focus on people, not controls. */
+@media(max-width:700px){
+  body{background:#09090b!important;color:#fff!important;padding-bottom:76px!important}
+  .top{display:none!important}
+  main.wrap{padding:0!important;max-width:none!important}
+  #app.layout{display:block!important;padding:0!important;margin:0!important;min-height:100dvh}
+  #app.layout.hidden{display:none!important}
+  #page-discover{padding:0!important;margin:0!important}
+  #page-discover .discover-toolbar,
+  #page-discover .discover-heading,
+  #page-discover #discoverFilters,
+  #page-discover #storyRow,
+  #page-discover #myDiscoverPosts,
+  #page-discover #refreshFeed,
+  #page-discover>.actions{display:none!important}
+  #page-discover #feed.feed{display:block!important;margin:0!important;padding:0!important}
+  #page-discover #feed .person{
+    position:relative!important;height:calc(100dvh - 78px)!important;min-height:540px!important;
+    max-height:980px!important;margin:0!important;border:0!important;border-radius:0 0 28px 28px!important;
+    overflow:hidden!important;background:#111!important;box-shadow:none!important
+  }
+  #page-discover #feed .person .portrait{
+    position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+    background:#171717!important;font-size:2rem!important
+  }
+  #page-discover #feed .person .portrait img{
+    width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important
+  }
+  #page-discover #feed .personbody{
+    position:absolute!important;left:0!important;right:0!important;bottom:0!important;
+    padding:22px 20px 112px!important;color:#fff!important;
+    background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,.28) 20%,rgba(0,0,0,.88) 100%)!important
+  }
+  #page-discover #feed .personbody h3{font-size:1.75rem!important;line-height:1.15!important;margin:0 0 5px!important}
+  #page-discover #feed .personbody h3 button{font-size:inherit!important;color:#fff!important}
+  #page-discover #feed .personbody p{color:#f5f5f5!important;margin:6px 0!important}
+  #page-discover #feed .personbody .pill{display:inline-block!important;background:rgba(255,255,255,.18)!important;color:#fff!important;border:1px solid rgba(255,255,255,.25)!important}
+  #page-discover #feed .personbody .actions{display:flex!important;gap:12px!important;margin:16px 0 0!important}
+  #page-discover #feed .personbody .actions button[data-report],
+  #page-discover #feed .personbody>button[data-block]{display:none!important}
+  #page-discover #feed .personbody .actions button[data-like]{
+    min-height:54px!important;border-radius:999px!important;background:#f42d67!important;color:#fff!important;
+    font-size:1.05rem!important;box-shadow:0 6px 20px #0005!important
+  }
+  #page-discover #feed .empty{margin:20px!important;color:#fff!important;background:#202020!important}
+  #mobileNav.mobile-nav{
+    position:fixed!important;z-index:100!important;left:0!important;right:0!important;bottom:0!important;
+    display:flex!important;justify-content:space-around!important;gap:0!important;
+    padding:7px 5px calc(7px + env(safe-area-inset-bottom))!important;
+    background:rgba(8,8,10,.97)!important;border-top:1px solid #292929!important;
+    backdrop-filter:blur(16px)!important
+  }
+  #mobileNav.mobile-nav button{
+    display:flex!important;flex:1!important;max-width:20%!important;min-width:0!important;
+    align-items:center!important;justify-content:center!important;gap:3px!important;
+    padding:5px 1px!important;background:transparent!important;color:#bdbdbd!important;
+    font-size:1.2rem!important;line-height:1.15!important;transform:none!important
+  }
+  #mobileNav.mobile-nav button span{font-size:.7rem!important;font-weight:600!important}
+  #mobileNav.mobile-nav button.active{color:#fff!important}
+  #page-video .discover-heading{display:block!important}
+  #page-video{padding:14px!important}
+  #page-video .discover-heading{padding:18px!important}
+  #page-video .panel{background:#171717!important;color:#fff!important;border-color:#333!important}
+  #page-video .panel p{color:#ddd!important}
+  .footer{display:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -330,7 +399,7 @@ button.soft{background:#454064!important;color:#f1eaff!important}
 </section>
 
 </div>
-</main><nav class="mobile-nav" id="mobileNav" aria-label="Main navigation"><button data-page="discover" class="active">⌕<span>Discover</span></button><button data-page="matches">♡<span>Likes</span></button><button data-page="messages">✉<span>Messages</span></button><button data-page="calls">◉<span>Calls</span></button><button data-page="video">＋<span>Post</span></button><button data-page="profile">☺<span>Profile</span></button></nav><footer class="footer"><div class="wrap">♡ Love Connect <span class="muted">Meet people. Be yourself. Keep it kind.</span></div></footer>
+</main><nav class="mobile-nav" id="mobileNav" aria-label="Main navigation"><button data-page="discover" class="active">♡<span>Swipe</span></button><button data-page="video">⌕<span>Explore</span></button><button data-page="matches">♥<span>Likes</span></button><button data-page="messages">▢<span>Chat</span></button><button data-page="profile">♙<span>Profile</span></button></nav><footer class="footer"><div class="wrap">♡ Love Connect <span class="muted">Meet people. Be yourself. Keep it kind.</span></div></footer>
 <script>
 const $=id=>document.getElementById(id);let isRegister=true,me=null,chatMember=null,subscriptionActive=false;
 function say(text,error=false){$("message").innerHTML=text?'<div class="status '+(error?'error':'')+'">'+escapeHtml(text)+'</div>':""}
