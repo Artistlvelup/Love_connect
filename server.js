@@ -143,12 +143,14 @@ async function initDb() {
       amount_kobo INTEGER NOT NULL, duration_days INTEGER NOT NULL,
       status TEXT NOT NULL DEFAULT 'awaiting_payment' CHECK (status IN ('awaiting_payment','pending_review','approved','rejected','completed')),
       payment_reference TEXT UNIQUE, paid_at TIMESTAMPTZ, starts_at TIMESTAMPTZ, ends_at TIMESTAMPTZ,
+      impressions BIGINT NOT NULL DEFAULT 0, clicks BIGINT NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
     CREATE INDEX IF NOT EXISTS sponsor_campaigns_member_idx ON sponsor_campaigns(member_id,created_at DESC);
   `);
   await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS photo_data BYTEA, ADD COLUMN IF NOT EXISTS photo_type TEXT");
   await pool.query("ALTER TABLE videos ADD COLUMN IF NOT EXISTS storage_key TEXT");
+  await pool.query("ALTER TABLE sponsor_campaigns ADD COLUMN IF NOT EXISTS impressions BIGINT NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS clicks BIGINT NOT NULL DEFAULT 0");
 }
 
 function requireAuth(req, res, next) {
@@ -229,6 +231,24 @@ app.get("/api/advertising/active", requireAuth, async (_req, res, next) => {
   try {
     const r = await pool.query("SELECT id,business_name,campaign_title,description,website_url,ends_at FROM sponsor_campaigns WHERE status='approved' AND starts_at<=now() AND ends_at>now() ORDER BY created_at DESC LIMIT 10");
     res.json({ campaigns: r.rows });
+  } catch (err) { next(err); }
+});
+app.post("/api/advertising/:id/event", requireAuth, rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false }), async (req, res, next) => {
+  try {
+    const id = String(req.params.id || "");
+    const event = String(req.body?.event || "");
+    if (!/^\d+$/.test(id) || !["impression", "click"].includes(event)) return res.status(400).json({ error: "Invalid advert event." });
+    const campaign = await pool.query("SELECT id FROM sponsor_campaigns WHERE id=$1 AND status='approved' AND starts_at<=now() AND ends_at>now()", [id]);
+    if (!campaign.rowCount) return res.status(404).json({ error: "Advert is not active." });
+    if (event === "impression") {
+      const seen = Array.isArray(req.session.adImpressions) ? req.session.adImpressions : [];
+      if (seen.includes(id)) return res.json({ recorded: false, reason: "already_counted_this_session" });
+      await pool.query("UPDATE sponsor_campaigns SET impressions=impressions+1 WHERE id=$1", [id]);
+      req.session.adImpressions = [...seen.slice(-99), id];
+    } else {
+      await pool.query("UPDATE sponsor_campaigns SET clicks=clicks+1 WHERE id=$1", [id]);
+    }
+    res.json({ recorded: true });
   } catch (err) { next(err); }
 });
 app.post("/api/advertising/campaigns", requireAuth, async (req, res, next) => {
