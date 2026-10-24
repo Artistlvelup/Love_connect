@@ -699,6 +699,120 @@ app.post("/api/members/:memberId/report", requireAuth, async (req, res, next) =>
   } catch (err) { next(err); }
 });
 
+
+function safeStringEqual(left, right) {
+  const a = Buffer.from(String(left || ""));
+  const b = Buffer.from(String(right || ""));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+function signAdminToken(payload) {
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const signature = crypto.createHmac("sha256", process.env.SESSION_SECRET).update(body).digest("base64url");
+  return body + "." + signature;
+}
+function verifyAdminToken(token) {
+  if (!token || !process.env.SESSION_SECRET) return null;
+  const parts = String(token).split(".");
+  if (parts.length !== 2) return null;
+  const expected = crypto.createHmac("sha256", process.env.SESSION_SECRET).update(parts[0]).digest("base64url");
+  if (!safeStringEqual(parts[1], expected)) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8"));
+    if (payload.role !== "owner-admin" || !payload.email || !Number.isFinite(payload.exp) || payload.exp <= Date.now()) return null;
+    if (String(payload.email).toLowerCase() !== String(process.env.ADMIN_EMAIL || "").toLowerCase().trim()) return null;
+    return payload;
+  } catch (_) { return null; }
+}
+function requireAdminControl(req, res, next) {
+  const header = String(req.get("authorization") || "");
+  const match = header.match(/^Bearer\\s+(.+)$/i);
+  const payload = verifyAdminToken(match && match[1]);
+  if (!payload) return res.status(401).json({ error: "Admin session expired. Sign in again." });
+  req.adminControl = payload;
+  next();
+}
+app.use("/api/admin-control", (req, res, next) => {
+  const allowedOrigin = String(process.env.ADMIN_CONTROL_ORIGIN || "").replace(/\\/+$/, "");
+  const origin = String(req.get("origin") || "").replace(/\\/+$/, "");
+  if (!allowedOrigin || !origin || origin !== allowedOrigin) {
+    return res.status(403).json({ error: "Admin Control website origin is not configured." });
+  }
+  res.set("Access-Control-Allow-Origin", allowedOrigin);
+  res.set("Vary", "Origin");
+  res.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  res.set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
+  res.set("Cache-Control", "no-store");
+  if (req.method === "OPTIONS") return res.status(204).end();
+  next();
+});
+const adminControlLoginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, standardHeaders: true, legacyHeaders: false });
+app.post("/api/admin-control/login", adminControlLoginLimiter, (req, res) => {
+  const configuredEmail = String(process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+  const configuredPassword = String(process.env.ADMIN_CONTROL_PASSWORD || "");
+  if (!configuredEmail || !configuredPassword) {
+    return res.status(503).json({ error: "Owner login is not configured yet. Set ADMIN_EMAIL and ADMIN_CONTROL_PASSWORD in the private Love Connect server settings." });
+  }
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  const password = String(req.body?.password || "");
+  if (!safeStringEqual(email, configuredEmail) || !safeStringEqual(password, configuredPassword)) {
+    return res.status(401).json({ error: "Email or password is incorrect." });
+  }
+  const token = signAdminToken({ role: "owner-admin", email: configuredEmail, exp: Date.now() + 6 * 60 * 60 * 1000 });
+  res.json({ token, email: configuredEmail, expiresIn: 21600 });
+});
+app.get("/api/admin-control/overview", requireAdminControl, async (_req, res, next) => {
+  try {
+    const [members, subscriptions, campaigns, reports, videos, messages] = await Promise.all([
+      pool.query("SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE created_at >= now() - interval '7 days')::int AS new_week FROM members"),
+      pool.query("SELECT COUNT(*) FILTER (WHERE status='active' AND (ends_at IS NULL OR ends_at > now()))::int AS active, COUNT(*)::int AS total FROM subscriptions"),
+      pool.query("SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status='pending_review')::int AS pending, COUNT(*) FILTER (WHERE status='approved' AND ends_at > now())::int AS active, COALESCE(SUM(amount_kobo) FILTER (WHERE paid_at IS NOT NULL),0)::bigint AS paid_kobo FROM sponsor_campaigns"),
+      pool.query("SELECT COUNT(*)::int AS total FROM reports"),
+      pool.query("SELECT COUNT(*)::int AS total FROM videos"),
+      pool.query("SELECT COUNT(*)::int AS total FROM messages")
+    ]);
+    res.json({ members: members.rows[0], subscriptions: subscriptions.rows[0], campaigns: campaigns.rows[0], reports: reports.rows[0], videos: videos.rows[0], messages: messages.rows[0] });
+  } catch (err) { next(err); }
+});
+app.get("/api/admin-control/members", requireAdminControl, async (_req, res, next) => {
+  try {
+    const r = await pool.query("SELECT m.id,m.email,m.display_name,m.country,m.created_at, EXISTS(SELECT 1 FROM subscriptions s WHERE s.member_id=m.id AND s.status='active' AND (s.ends_at IS NULL OR s.ends_at>now())) AS has_active_subscription FROM members m ORDER BY m.created_at DESC LIMIT 200");
+    res.json({ members: r.rows });
+  } catch (err) { next(err); }
+});
+app.get("/api/admin-control/campaigns", requireAdminControl, async (_req, res, next) => {
+  try {
+    const r = await pool.query("SELECT c.id,c.business_name,c.campaign_title,c.description,c.website_url,c.package_code,c.amount_kobo,c.duration_days,c.status,c.payment_reference,c.paid_at,c.starts_at,c.ends_at,c.impressions,c.clicks,c.created_at,m.email AS advertiser_email FROM sponsor_campaigns c JOIN members m ON m.id=c.member_id ORDER BY CASE WHEN c.status='pending_review' THEN 0 ELSE 1 END,c.created_at DESC LIMIT 200");
+    res.json({ campaigns: r.rows });
+  } catch (err) { next(err); }
+});
+app.patch("/api/admin-control/campaigns/:id", requireAdminControl, async (req, res, next) => {
+  try {
+    const status = String(req.body?.status || "");
+    if (!["approved","rejected"].includes(status)) return res.status(400).json({ error: "Choose approved or rejected." });
+    const r = await pool.query("UPDATE sponsor_campaigns SET status=$1,starts_at=CASE WHEN $1='approved' THEN now() ELSE starts_at END,ends_at=CASE WHEN $1='approved' THEN now() + (duration_days || ' days')::interval ELSE ends_at END,updated_at=now() WHERE id=$2 AND status='pending_review' RETURNING id,status,starts_at,ends_at", [status, req.params.id]);
+    if (!r.rowCount) return res.status(404).json({ error: "Campaign is not awaiting review or could not be found." });
+    res.json({ campaign: r.rows[0] });
+  } catch (err) { next(err); }
+});
+app.get("/api/admin-control/reports", requireAdminControl, async (_req, res, next) => {
+  try {
+    const r = await pool.query("SELECT r.id,r.reason,r.details,r.created_at,reporter.display_name AS reporter_name,reporter.email AS reporter_email,reported.display_name AS reported_name,reported.email AS reported_email FROM reports r JOIN members reporter ON reporter.id=r.reporter_id JOIN members reported ON reported.id=r.reported_id ORDER BY r.created_at DESC LIMIT 200");
+    res.json({ reports: r.rows });
+  } catch (err) { next(err); }
+});
+app.get("/api/admin-control/subscriptions", requireAdminControl, async (_req, res, next) => {
+  try {
+    const r = await pool.query("SELECT s.id,s.plan_code,s.status,s.provider,s.provider_reference,s.starts_at,s.ends_at,s.created_at,m.display_name,m.email FROM subscriptions s JOIN members m ON m.id=s.member_id ORDER BY s.created_at DESC LIMIT 200");
+    res.json({ subscriptions: r.rows });
+  } catch (err) { next(err); }
+});
+app.get("/api/admin-control/videos", requireAdminControl, async (_req, res, next) => {
+  try {
+    const r = await pool.query("SELECT v.id,v.original_name,v.duration_seconds,v.created_at,m.display_name,m.email,m.country FROM videos v JOIN members m ON m.id=v.member_id ORDER BY v.created_at DESC LIMIT 200");
+    res.json({ videos: r.rows });
+  } catch (err) { next(err); }
+});
+
 app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] }));
 app.use((err, _req, res, _next) => {
   console.error(err);
