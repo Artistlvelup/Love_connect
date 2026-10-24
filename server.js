@@ -149,6 +149,7 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS sponsor_campaigns_member_idx ON sponsor_campaigns(member_id,created_at DESC);
   `);
   await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS photo_data BYTEA, ADD COLUMN IF NOT EXISTS photo_type TEXT");
+  await pool.query("CREATE TABLE IF NOT EXISTS stories (id BIGSERIAL PRIMARY KEY, member_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE, image_data BYTEA NOT NULL, image_type TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()); CREATE INDEX IF NOT EXISTS stories_recent_idx ON stories(created_at DESC)");
   await pool.query(`CREATE TABLE IF NOT EXISTS member_photos (id BIGSERIAL PRIMARY KEY, member_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE, photo_data BYTEA NOT NULL, photo_type TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()); CREATE INDEX IF NOT EXISTS member_photos_member_idx ON member_photos(member_id, created_at, id);`);
   await pool.query("ALTER TABLE videos ADD COLUMN IF NOT EXISTS storage_key TEXT");
   await pool.query("ALTER TABLE sponsor_campaigns ADD COLUMN IF NOT EXISTS impressions BIGINT NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS clicks BIGINT NOT NULL DEFAULT 0");
@@ -701,6 +702,40 @@ app.post("/api/videos", requireAuth, requireActiveSubscription, (req, res, next)
   });
 });
 
+app.get("/api/stories", requireAuth, async (req, res, next) => {
+  try {
+    await pool.query("DELETE FROM stories WHERE created_at < now() - interval '24 hours'");
+    const r = await pool.query("SELECT s.id,s.member_id,s.created_at,m.display_name FROM stories s JOIN members m ON m.id=s.member_id WHERE s.created_at >= now() - interval '24 hours' AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=s.member_id) OR (b.blocker_id=s.member_id AND b.blocked_id=$1)) ORDER BY s.created_at DESC LIMIT 100", [req.session.memberId]);
+    res.json({ stories: r.rows.map(x => ({ id: x.id, memberId: x.member_id, displayName: x.display_name, createdAt: x.created_at, imageUrl: "/api/stories/" + x.id + "/image" })) });
+  } catch (err) { next(err); }
+});
+
+app.post("/api/stories", requireAuth, (req, res, next) => {
+  const storyUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 512 * 1024, files: 1 }, fileFilter: (_req, file, cb) => {
+    if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) return cb(null, true);
+    cb(new Error("Choose a JPG, PNG, or WebP image for your story."));
+  }}).single("story");
+  storyUpload(req, res, async err => {
+    if (err) return res.status(400).json({ error: err.code === "LIMIT_FILE_SIZE" ? "Story image must be 512 KB or smaller." : (err.message || "Story upload failed.") });
+    if (!req.file) return res.status(400).json({ error: "Choose a JPG, PNG, or WebP image for your story." });
+    try {
+      await pool.query("DELETE FROM stories WHERE created_at < now() - interval '24 hours'");
+      const r = await pool.query("INSERT INTO stories(member_id,image_data,image_type) VALUES($1,$2,$3) RETURNING id,member_id,created_at", [req.session.memberId, req.file.buffer, req.file.mimetype]);
+      const m = await pool.query("SELECT display_name FROM members WHERE id=$1", [req.session.memberId]);
+      res.status(201).json({ story: { id: r.rows[0].id, memberId: r.rows[0].member_id, displayName: m.rows[0]?.display_name || "Your story", createdAt: r.rows[0].created_at, imageUrl: "/api/stories/" + r.rows[0].id + "/image" } });
+    } catch (e) { next(e); }
+  });
+});
+
+app.get("/api/stories/:id/image", requireAuth, async (req, res, next) => {
+  try {
+    const r = await pool.query("SELECT s.image_data,s.image_type FROM stories s WHERE s.id=$1 AND s.created_at >= now() - interval '24 hours' AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=s.member_id) OR (b.blocker_id=s.member_id AND b.blocked_id=$2))", [req.params.id, req.session.memberId]);
+    if (!r.rowCount) return res.sendStatus(404);
+    res.set("Content-Type", r.rows[0].image_type);
+    res.set("Cache-Control", "private, max-age=60");
+    res.send(r.rows[0].image_data);
+  } catch (err) { next(err); }
+});
 app.get("/api/video-feed", requireAuth, async (req, res, next) => {
   try {
     const r = await pool.query(`
