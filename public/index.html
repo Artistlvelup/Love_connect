@@ -233,6 +233,51 @@ html,body{overscroll-behavior-x:none}
 
 
 .chat-room-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px}.chat-back-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:10px 18px;font-weight:700;border:2px solid #7652d6;border-radius:12px;background:#fff;color:#4b2b9a;box-shadow:0 2px 6px rgba(35,25,65,.12)}.chat-room-toolbar #chatTitle{margin:0;flex:1;min-width:0}
+
+/* Softer coordinated colours: replace glaring white panels with calm blue-plum surfaces */
+:root{--ink:#edf0ff;--muted:#b8c1dc;--paper:#202943;--line:#465271;--panel:#2b3552}
+body{color:#edf0ff}
+.panel,.card,#auth,.welcome-card,.photo-editor,.gallery-editor,.my-discover-video,.video-post,
+.chatrow,.filter-row,.ad-form,.ad-package-card,.ad-payment-note{
+  background:#2b3552!important;color:#edf0ff!important;border-color:#465271!important;
+  box-shadow:0 10px 28px rgba(5,9,25,.2)
+}
+.panel h1,.panel h2,.panel h3,.panel h4,.panel label,.panel p,.panel strong,
+.card h1,.card h2,.card h3,.card p,.card strong,.video-post .personbody,
+.ad-heading .section-title,.ad-subheading,.ad-package-top strong,.ad-package-top>span,
+.ad-package-description,.ad-package-prompt,.ad-my-campaigns{color:#edf0ff!important}
+.personbody,.personbody p,.personbody h3{color:#edf0ff!important}
+.field input,.field textarea,.field select,.ad-form .field input,.ad-form .field textarea,
+.discover-search,.chatrow,.password-wrap input{
+  background:#202943!important;color:#f5f6ff!important;border-color:#536080!important
+}
+.field input::placeholder,.field textarea::placeholder,.discover-search::placeholder{color:#aab4d0!important}
+.field label,.ad-form .field,.ad-field-help,.ad-optional{color:#d1d8ed!important}
+.notice,.empty,.ad-payment-note{background:#333d5b!important;color:#d5dcef!important;border-color:#536080!important}
+.empty{border-style:dashed}
+.photo-editor,.gallery-editor{background:#2b3552!important}
+.gallery-photo{background:#343e5d!important;border-color:#536080!important}
+.gallery-editor input{color:#edf0ff}
+.chatrow{background:#303a58!important;color:#edf0ff!important}
+.filter-row{background:#29334f!important;border-color:#465271!important}
+.filter-chip{background:#394463!important;color:#edf0ff!important;border-color:#536080!important}
+.filter-chip[data-filter="all"]{background:#48416c!important;color:#f3efff!important;border-color:#7567a7!important}
+.filter-chip[data-filter="nearby"]{background:#254e4a!important;color:#c7f6e7!important;border-color:#3c8778!important}
+.filter-chip[data-filter="new"]{background:#594331!important;color:#ffe0b8!important;border-color:#a97748!important}
+.filter-chip[data-filter="interests"]{background:#2d4567!important;color:#d8e8ff!important;border-color:#557eb3!important}
+.story-ring span{background:#2b3552!important;color:#f3efff!important;border-color:#2b3552!important}
+.welcome-card{background:linear-gradient(135deg,#303a59,#3b3459)!important}
+.sponsor,.ad-space,.sponsor-card{background:linear-gradient(135deg,#3b304e,#2d3b5a)!important;color:#edf0ff!important;border-color:#655681!important}
+.sponsor-card h3,.sponsor-card p,.sponsor-card strong,.why-ad{color:#e4e8fb!important}
+.ad-package-card:has(input:checked),.ad-package-card.selected{background:linear-gradient(145deg,#40365f,#443348)!important;border-color:#a58be8!important}
+.ad-payment-note strong{color:#f0edff!important}
+.status{background:#214b43!important;color:#c7f6e7!important;border-color:#3d806f!important}
+.status.error{background:#572f42!important;color:#ffe0e8!important;border-color:#a75b76!important}
+.footer{background:rgba(25,34,57,.8)!important;color:#c4cde5!important}
+.profile-details-photo{border-color:#536080!important}
+button.soft{background:#454064!important;color:#f1eaff!important}
+@media(max-width:700px){.mobile-nav,#mobileNav.mobile-nav{background:rgba(25,34,57,.98)!important}}
+
 </style>
 </head>
 <body>
