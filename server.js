@@ -149,6 +149,7 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS sponsor_campaigns_member_idx ON sponsor_campaigns(member_id,created_at DESC);
   `);
   await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS photo_data BYTEA, ADD COLUMN IF NOT EXISTS photo_type TEXT");
+  await pool.query(`CREATE TABLE IF NOT EXISTS member_photos (id BIGSERIAL PRIMARY KEY, member_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE, photo_data BYTEA NOT NULL, photo_type TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()); CREATE INDEX IF NOT EXISTS member_photos_member_idx ON member_photos(member_id, created_at, id);`);
   await pool.query("ALTER TABLE videos ADD COLUMN IF NOT EXISTS storage_key TEXT");
   await pool.query("ALTER TABLE sponsor_campaigns ADD COLUMN IF NOT EXISTS impressions BIGINT NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS clicks BIGINT NOT NULL DEFAULT 0");
 }
@@ -416,6 +417,63 @@ app.post("/api/me/photo", requireAuth, (req, res, next) => {
 app.delete("/api/me/photo", requireAuth, async (req, res, next) => {
   try {
     await pool.query("UPDATE members SET photo_data=NULL,photo_type=NULL WHERE id=$1", [req.session.memberId]);
+    res.json({ removed: true });
+  } catch (err) { next(err); }
+});
+
+app.post("/api/me/photos", requireAuth, (req, res, next) => {
+  const uploadGallery = multer({ storage: multer.memoryStorage(), limits: { fileSize: 512 * 1024, files: 8 }, fileFilter: (_req, file, cb) => {
+    if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) return cb(null, true);
+    cb(new Error("Choose JPG, PNG, or WebP photos."));
+  }}).array("photos", 8);
+  uploadGallery(req, res, async err => {
+    if (err) return res.status(400).json({ error: err.code === "LIMIT_FILE_SIZE" ? "Each photo must be 512 KB or smaller." : (err.message || "Photo upload failed.") });
+    if (!req.files || !req.files.length) return res.status(400).json({ error: "Choose at least one photo." });
+    try {
+      const count = await pool.query("SELECT count(*)::int AS total FROM member_photos WHERE member_id=$1", [req.session.memberId]);
+      const total = Number(count.rows[0].total || 0);
+      if (total + req.files.length > 8) return res.status(400).json({ error: "You can save up to 8 gallery photos. Remove a photo before adding more." });
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        for (const file of req.files) await client.query("INSERT INTO member_photos(member_id,photo_data,photo_type) VALUES($1,$2,$3)", [req.session.memberId, file.buffer, file.mimetype]);
+        await client.query("COMMIT");
+      } catch (e) { await client.query("ROLLBACK"); throw e; }
+      finally { client.release(); }
+      res.json({ saved: true, added: req.files.length });
+    } catch (e) { next(e); }
+  });
+});
+app.get("/api/members/:memberId/photos", requireAuth, async (req, res, next) => {
+  try {
+    const blocked = await pool.query("SELECT 1 FROM member_blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1)", [req.session.memberId, req.params.memberId]);
+    if (blocked.rowCount) return res.sendStatus(404);
+    const member = await pool.query("SELECT photo_data FROM members WHERE id=$1", [req.params.memberId]);
+    if (!member.rowCount) return res.status(404).json({ error: "Member not found." });
+    const gallery = await pool.query("SELECT id FROM member_photos WHERE member_id=$1 ORDER BY created_at, id LIMIT 8", [req.params.memberId]);
+    const photos = [];
+    if (member.rows[0].photo_data) photos.push({ id: "primary", url: "/api/members/" + encodeURIComponent(req.params.memberId) + "/photos/primary" });
+    for (const p of gallery.rows) photos.push({ id: String(p.id), url: "/api/members/" + encodeURIComponent(req.params.memberId) + "/photos/" + encodeURIComponent(p.id) });
+    res.json({ photos });
+  } catch (err) { next(err); }
+});
+app.get("/api/members/:memberId/photos/:photoId", requireAuth, async (req, res, next) => {
+  try {
+    const blocked = await pool.query("SELECT 1 FROM member_blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1)", [req.session.memberId, req.params.memberId]);
+    if (blocked.rowCount) return res.sendStatus(404);
+    let r;
+    if (req.params.photoId === "primary") r = await pool.query("SELECT photo_data AS data, photo_type AS type FROM members WHERE id=$1", [req.params.memberId]);
+    else r = await pool.query("SELECT photo_data AS data, photo_type AS type FROM member_photos WHERE id=$1 AND member_id=$2", [req.params.photoId, req.params.memberId]);
+    if (!r.rowCount || !r.rows[0].data) return res.sendStatus(404);
+    res.set("Content-Type", r.rows[0].type || "image/webp");
+    res.set("Cache-Control", "private, max-age=300");
+    res.send(r.rows[0].data);
+  } catch (err) { next(err); }
+});
+app.delete("/api/me/photos/:photoId", requireAuth, async (req, res, next) => {
+  try {
+    const r = await pool.query("DELETE FROM member_photos WHERE id=$1 AND member_id=$2", [req.params.photoId, req.session.memberId]);
+    if (!r.rowCount) return res.status(404).json({ error: "Gallery photo not found." });
     res.json({ removed: true });
   } catch (err) { next(err); }
 });
