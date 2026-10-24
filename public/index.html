@@ -544,13 +544,25 @@ async function loadStories(){
   for(const story of stories){if(!byMember.has(String(story.memberId)))byMember.set(String(story.memberId),story);}
   const mine=byMember.get(String(me.id));
   const add=$("addStoryButton");
-  if(add){const label=add.querySelector("span:last-child");if(label)label.textContent="＋ Add story";}
+  if(add){
+   const label=add.querySelector("span:last-child");
+   const inner=add.querySelector(".story-ring > span");
+   if(label)label.textContent=mine?"Your story · Add":"＋ Add story";
+   if(inner){
+    inner.innerHTML="";
+    if(mine){
+     const img=document.createElement("img");img.src=mine.imageUrl;img.alt="";img.style.cssText="width:100%;height:100%;object-fit:cover;border-radius:50%";inner.appendChild(img);
+    }else inner.textContent="+";
+   }
+  }
   for(const story of byMember.values()){
+   // The signed-in member's story is shown in the single add-story circle above.
+   if(String(story.memberId)===String(me.id))continue;
    const b=document.createElement("button");b.type="button";b.className="story";b.dataset.storyId=String(story.id);b.style.cssText="border:0;background:transparent;color:inherit;cursor:pointer;padding:0";
    const ring=document.createElement("span");ring.className="story-ring";
    const inner=document.createElement("span");
    const img=document.createElement("img");img.src=story.imageUrl;img.alt="";img.style.cssText="width:100%;height:100%;object-fit:cover;border-radius:50%";inner.appendChild(img);ring.appendChild(inner);
-   const caption=document.createElement("span");caption.textContent=String(story.memberId)===String(me.id)?"Your story":story.displayName;
+   const caption=document.createElement("span");caption.textContent=story.displayName;
    b.append(ring,caption);row.appendChild(b);b.addEventListener("click",()=>openStoryViewer(story));
   }
   if(status)status.textContent="";
