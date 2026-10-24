@@ -393,6 +393,13 @@ app.post("/api/me/photo", requireAuth, (req, res, next) => {
     } catch (e) { next(e); }
   });
 });
+app.delete("/api/me/photo", requireAuth, async (req, res, next) => {
+  try {
+    await pool.query("UPDATE members SET photo_data=NULL,photo_type=NULL WHERE id=$1", [req.session.memberId]);
+    res.json({ removed: true });
+  } catch (err) { next(err); }
+});
+
 app.get("/api/members/:memberId/photo", requireAuth, async (req, res, next) => {
   try {
     const blocked = await pool.query("SELECT 1 FROM member_blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1)", [req.session.memberId, req.params.memberId]);
