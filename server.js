@@ -12,7 +12,7 @@ const path = require("node:path");
 const fs = require("node:fs");
 const crypto = require("node:crypto");
 const { promisify } = require("node:util");
-const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const app = express();
@@ -794,6 +794,21 @@ app.get("/api/video-feed", requireAuth, async (req, res, next) => {
       country: v.country, bio: v.bio, durationSeconds: Number(v.duration_seconds),
       createdAt: v.created_at, videoUrl: "/api/videos/" + v.id
     })) });
+  } catch (err) { next(err); }
+});
+
+app.delete("/api/videos/:id", requireAuth, requireActiveSubscription, async (req, res, next) => {
+  try {
+    const found = await pool.query("SELECT id,filename,storage_key FROM videos WHERE id=$1 AND member_id=$2", [req.params.id, req.session.memberId]);
+    if (!found.rowCount) return res.status(404).json({ error: "Your video could not be found." });
+    const video = found.rows[0];
+    if (video.storage_key) {
+      if (!r2Configured()) return res.status(503).json({ error: "Cloud video storage is not connected; the video was not deleted." });
+      await r2Client.send(new DeleteObjectCommand({ Bucket: r2Bucket, Key: video.storage_key }));
+    }
+    await pool.query("DELETE FROM videos WHERE id=$1 AND member_id=$2", [req.params.id, req.session.memberId]);
+    if (video.filename) fs.unlink(path.join(uploadDir, path.basename(video.filename)), () => {});
+    res.json({ deleted: true, id: video.id });
   } catch (err) { next(err); }
 });
 
