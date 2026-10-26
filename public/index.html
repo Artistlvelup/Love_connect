@@ -359,6 +359,14 @@ button.soft{background:#454064!important;color:#f1eaff!important}
 .empty-people-copy{max-width:430px;margin:0 auto 20px!important;color:#766477!important;line-height:1.7}
 .empty-people-card button{min-height:46px;padding:12px 20px!important;box-shadow:0 7px 16px #c12c7526}
 .empty-people-note{margin:17px 0 0!important;font-size:.82rem;color:#8a7b89!important}
+
+/* RESTORE the user's own photo/video posts section on mobile Discover */
+@media(max-width:700px){
+  #page-discover #myDiscoverPosts{display:block!important;visibility:visible!important;opacity:1!important;height:auto!important;max-height:none!important;overflow:visible!important;margin:14px 12px 18px!important}
+  #page-discover #myDiscoverPosts #myDiscoverVideos{display:grid!important;visibility:visible!important}
+  #page-discover #myDiscoverPosts #myDiscoverPostVideo{display:inline-block!important;visibility:visible!important}
+}
+
 </style>
 </head>
 <body>
