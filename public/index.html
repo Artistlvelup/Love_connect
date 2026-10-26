@@ -424,7 +424,7 @@ button.soft{background:#454064!important;color:#f1eaff!important}
 const $=id=>document.getElementById(id);let isRegister=true,me=null,chatMember=null,subscriptionActive=false;
 function say(text,error=false){$("message").innerHTML=text?'<div class="status '+(error?'error':'')+'">'+escapeHtml(text)+'</div>':""}
 function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-async function api(url,options={}){const res=await fetch(url,{credentials:"same-origin",...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});let data={};try{data=await res.json()}catch{}if(!res.ok)throw new Error(data.error||"Request failed");return data}
+async function api(url,options={}){const res=await fetch(url,{cache:"no-store",credentials:"same-origin",...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});let data={};try{data=await res.json()}catch{}if(!res.ok)throw new Error(data.error||"Request failed");return data}
 function authMode(reg){isRegister=reg;$("authTitle").textContent=reg?"Join Love Connect":"Welcome back";$("registerFields").classList.toggle("hidden",!reg);["displayName","birthDate","country"].forEach(id=>$(id).required=reg);$("adultConsent").required=reg;$("adultConsent").closest("label").classList.toggle("hidden",!reg);$("authSubmit").textContent=reg?"Create my account":"Log in";$("switchAuth").textContent=reg?"Already a member? Log in":"New to Love Connect? Join free";$("password").autocomplete=reg?"new-password":"current-password";$("password").minLength=reg?10:1}
 function showPage(page){document.querySelectorAll(".page").forEach(x=>x.classList.add("hidden"));$("page-"+page)?.classList.remove("hidden");document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===page));if(page==="discover"){loadFeed();loadMyDiscoverPosts()}if(page==="video")loadVideoFeed();if(page==="matches")loadMatches();if(page==="messages")loadMessages();if(page==="advertise")loadMyCampaigns();if(page==="calls"){startSignalPolling();loadCallMatches()}window.scrollTo({top:0,behavior:"smooth"})}
 function renderProfileDetails(member){
@@ -508,7 +508,7 @@ async function openDiscoverProfile(m){
  modal.querySelector("#modalLikeMember").onclick=async()=>{const b=modal.querySelector("#modalLikeMember");b.disabled=true;b.textContent="Sending…";try{const r=await api("/api/likes/"+encodeURIComponent(m.id),{method:"POST",body:"{}"});say(r.matched?"It’s a match! You can message each other now.":"Like sent.");b.textContent="♥ Liked";}catch(e){say(e.message,true);b.disabled=false;b.textContent="♡ Like profile";}};
  const esc=e=>{if(e.key==="Escape"){modal.remove();document.removeEventListener("keydown",esc)}};document.addEventListener("keydown",esc);
 }
-async function loadFeed(){if(!me)return;try{const d=await api("/api/discover");discoverMembers=d.members||[];renderDiscoverFeed()}catch(e){say(e.message,true)}}
+async function loadFeed(){if(!me)return;try{const d=await api("/api/discover");discoverMembers=(d.members||[]).filter(m=>String(m.id)!==String(me.id));renderDiscoverFeed()}catch(e){say(e.message,true)}}
 async function loadMyDiscoverPosts(){
  const photosBox=$("myDiscoverPhotos"),videosBox=$("myDiscoverVideos");
  if(!me||!photosBox||!videosBox)return;
