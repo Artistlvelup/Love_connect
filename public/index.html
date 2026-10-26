@@ -784,7 +784,7 @@ document.querySelectorAll('input[name="adPackageChoice"]').forEach(input=>input.
 if($("topPostVideo"))$("topPostVideo").onclick=()=>showPage("video");
 if($("myDiscoverPostVideo"))$("myDiscoverPostVideo").onclick=()=>showPage("video");
 if($("peopleSearch"))$("peopleSearch").addEventListener("input",renderDiscoverFeed);
-if($("discoverFilters"))$("discoverFilters").querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{activeDiscoverFilter=b.dataset.filter;$("discoverFilters").querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));renderDiscoverFeed()});
+let nearbyLocationReady=false; async function enableNearbyLocation(){if(!navigator.geolocation){say("Location is not supported in this browser.",true);return;}navigator.geolocation.getCurrentPosition(async pos=>{try{await api("/api/me/location",{method:"PATCH",body:JSON.stringify({latitude:pos.coords.latitude,longitude:pos.coords.longitude})});nearbyLocationReady=true;say("Nearby location saved. Your exact location is private.");await loadFeed();}catch(err){say(err.message||"Could not save location.",true);}},()=>say("Allow location access to use Nearby, or use Search instead.",true),{timeout:12000,maximumAge:300000});} if($("discoverFilters"))$("discoverFilters").querySelectorAll("[data-filter]").forEach(b=>b.onclick=async()=>{activeDiscoverFilter=b.dataset.filter;$("discoverFilters").querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));if(activeDiscoverFilter==="nearby"&&!nearbyLocationReady){await enableNearbyLocation();return;}renderDiscoverFeed()});
 document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 if($("refreshFeed"))$("refreshFeed").onclick=loadFeed;
 
