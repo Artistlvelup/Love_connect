@@ -383,6 +383,37 @@ button.soft{background:#454064!important;color:#f1eaff!important}
 
 /* Auth screen repair: keep the fixed mobile bar completely off the sign-up/login screen. */
 @media(max-width:700px){#mobileNav.mobile-nav.auth-hidden{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}}
+
+/* Focused WhatsApp-style call layout: only affects the call page and active-call state. */
+@media(max-width:700px){
+ body:has(#page-calls.call-active) .top,
+ body:has(#page-calls.call-active) .hero,
+ body:has(#page-calls.call-active) #message,
+ body:has(#page-calls.call-active) #mobileNav{display:none!important}
+ body:has(#page-calls.call-active){padding:0!important;overflow:hidden!important;background:#080d18!important}
+ #page-calls.call-active{position:fixed!important;inset:0!important;z-index:2147482000!important;display:block!important;overflow:hidden!important;width:100vw!important;height:100dvh!important;max-width:none!important;margin:0!important;padding:0!important;background:#080d18!important}
+ #page-calls.call-active .call-page-panel{position:relative!important;width:100%!important;height:100%!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#080d18!important;color:#fff!important;overflow:hidden!important}
+ #page-calls.call-active .call-page-heading{display:none!important}
+ #page-calls.call-active #callsMatches{display:none!important}
+ #page-calls.call-active #incomingCallControls{position:absolute!important;top:env(safe-area-inset-top,0px)!important;left:12px!important;right:12px!important;z-index:20!important}
+ #page-calls.call-active .call-stage{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;max-height:none!important;border-radius:0!important;box-shadow:none!important}
+ #page-calls.call-active .call-personbar{top:calc(12px + env(safe-area-inset-top,0px))!important;left:14px!important;right:14px!important;padding:9px 12px!important;background:rgba(10,15,29,.48)!important;backdrop-filter:blur(12px)!important}
+ #page-calls.call-active .call-stage #localVideo{right:14px!important;top:calc(76px + env(safe-area-inset-top,0px))!important;width:clamp(104px,29vw,144px)!important;height:clamp(140px,21vh,190px)!important;max-height:29vh!important;aspect-ratio:3/4!important;border:2px solid rgba(255,255,255,.92)!important;border-radius:18px!important;box-shadow:0 8px 28px #0007!important;object-fit:cover!important;z-index:4!important}
+ #page-calls.call-active .call-stage.is-connected.remote-focused #localVideo{inset:calc(76px + env(safe-area-inset-top,0px)) 14px auto auto!important}
+ #page-calls.call-active .call-controls{bottom:calc(12px + env(safe-area-inset-bottom,0px))!important;left:0!important;right:0!important;gap:clamp(12px,4vw,22px)!important;padding:38px 14px 14px!important;background:linear-gradient(transparent,rgba(5,8,18,.84) 42%)!important}
+ #page-calls.call-active .call-control{width:58px!important;height:58px!important;min-width:58px!important;background:rgba(255,255,255,.17)!important;border:1px solid rgba(255,255,255,.25)!important;border-radius:50%!important}
+ #page-calls.call-active .call-control.call-end-button{background:#e53950!important;border-color:#e53950!important}
+ #page-calls.call-active .call-statusline{position:absolute!important;left:16px!important;right:16px!important;bottom:calc(100px + env(safe-area-inset-bottom,0px))!important;z-index:6!important;margin:0!important;color:#fff!important;font-size:.8rem!important;text-shadow:0 1px 5px #000!important}
+ #page-calls.call-active .call-quality-note{display:none!important}
+ #page-calls.call-active .call-waiting{background:radial-gradient(ellipse at 50% 35%,#28334c,#080d18 70%)!important}
+}
+@media(min-width:701px){
+ #page-calls.call-active .call-page-panel{background:#0d1424!important;color:#fff!important}
+ #page-calls.call-active .call-page-heading{display:none!important}
+ #page-calls.call-active #callsMatches{display:none!important}
+ #page-calls.call-active .call-stage{height:calc(100vh - 30px)!important;max-height:none!important;min-height:500px!important;border-radius:0!important}
+}
+
 </style>
 
 </head>
@@ -663,7 +694,51 @@ $("micToggle").disabled=true;$("cameraToggle").disabled=true;$("switchCamera").d
 $("micToggle").onclick=()=>{if(!localStream)return;const tracks=localStream.getAudioTracks();const enabled=tracks.some(t=>t.enabled);tracks.forEach(t=>t.enabled=!enabled);$("micToggle").innerHTML=enabled?'🔇<span>Unmute</span>':'🎙️<span>Mute</span>';$("micToggle").setAttribute("aria-label",enabled?"Unmute microphone":"Mute microphone");};
 $("cameraToggle").onclick=()=>{if(!localStream)return;const tracks=localStream.getVideoTracks();const enabled=tracks.some(t=>t.enabled);tracks.forEach(t=>t.enabled=!enabled);$("cameraToggle").innerHTML=enabled?'🚫<span>Camera off</span>':'📹<span>Camera</span>';$("cameraToggle").setAttribute("aria-label",enabled?"Turn camera on":"Turn camera off");};
 let cameraFacing="user";
-$("switchCamera").onclick=async()=>{if(!localStream||!pc)return;const oldTrack=localStream.getVideoTracks()[0];try{cameraFacing=cameraFacing==="user"?"environment":"user";const nextStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:cameraFacing}},audio:false});const nextTrack=nextStream.getVideoTracks()[0];const sender=pc.getSenders().find(x=>x.track&&x.track.kind==="video");if(sender)await sender.replaceTrack(nextTrack);if(oldTrack){localStream.removeTrack(oldTrack);oldTrack.stop()}localStream.addTrack(nextTrack);$("localVideo").srcObject=localStream;}catch(err){cameraFacing=cameraFacing==="user"?"environment":"user";say("Could not switch camera on this device. "+(err.message||""),true);}};
+$("switchCamera").onclick=async()=>{
+ if(!localStream||!pc)return;
+ const oldTrack=localStream.getVideoTracks()[0];
+ const sender=pc.getSenders().find(x=>x.track&&x.track.kind==="video");
+ if(!oldTrack||!sender)return;
+ const previousFacing=cameraFacing;
+ const nextFacing=previousFacing==="user"?"environment":"user";
+ const cameraButton=$("switchCamera");
+ cameraButton.disabled=true;
+ try{
+  let devices=[];
+  try{devices=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="videoinput")}catch{}
+  const currentId=oldTrack.getSettings().deviceId;
+  const wantedLabel=nextFacing==="environment"?/back|rear|environment|world/i:/front|user|facetime/i;
+  let target=devices.find(d=>d.deviceId!==currentId&&wantedLabel.test(d.label));
+  if(!target)target=devices.find(d=>d.deviceId!==currentId);
+  let nextStream=null;
+  // Release the active camera before opening another one; this avoids common Android camera-busy errors.
+  localStream.removeTrack(oldTrack);
+  oldTrack.stop();
+  try{
+   const video=target?{deviceId:{exact:target.deviceId}}:{facingMode:{ideal:nextFacing}};
+   nextStream=await navigator.mediaDevices.getUserMedia({video,audio:false});
+  }catch(firstError){
+   // If the device exposes only one camera, reopen a usable camera instead of leaving video broken.
+   nextStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:previousFacing}},audio:false});
+   cameraFacing=previousFacing;
+   const restored=nextStream.getVideoTracks()[0];
+   await sender.replaceTrack(restored);
+   localStream.addTrack(restored);
+   $("localVideo").srcObject=localStream;
+   throw new Error("This device did not allow the other camera. Your original camera has been restored.");
+  }
+  const nextTrack=nextStream.getVideoTracks()[0];
+  await sender.replaceTrack(nextTrack);
+  localStream.addTrack(nextTrack);
+  nextStream.getAudioTracks().forEach(t=>t.stop());
+  cameraFacing=nextFacing;
+  $("localVideo").srcObject=localStream;
+  $("callStatus").textContent="Using "+(nextFacing==="environment"?"rear":"front")+" camera.";
+ }catch(err){
+  cameraFacing=previousFacing;
+  say(err.message||"Could not switch camera. Please check camera permissions.",true);
+ }finally{cameraButton.disabled=false;}
+};
 $("endCall").onclick=()=>cleanupCall(true);
 async function signOutAndReset(){if(pc)await cleanupCall(true);if(signalTimer){clearInterval(signalTimer);signalTimer=null}if(chatRefreshTimer){clearInterval(chatRefreshTimer);chatRefreshTimer=null}chatMember=null;try{await api("/api/auth/logout",{method:"POST",body:"{}"})}catch{}location.reload()}
 async function switchAccount(){await signOutAndReset()}
