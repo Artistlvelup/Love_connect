@@ -149,6 +149,7 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS sponsor_campaigns_member_idx ON sponsor_campaigns(member_id,created_at DESC);
   `);
   await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS photo_data BYTEA, ADD COLUMN IF NOT EXISTS photo_type TEXT");
+  await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION, ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION");
   await pool.query("CREATE TABLE IF NOT EXISTS stories (id BIGSERIAL PRIMARY KEY, member_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE, image_data BYTEA NOT NULL, image_type TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()); CREATE INDEX IF NOT EXISTS stories_recent_idx ON stories(created_at DESC)");
   await pool.query(`CREATE TABLE IF NOT EXISTS member_photos (id BIGSERIAL PRIMARY KEY, member_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE, photo_data BYTEA NOT NULL, photo_type TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()); CREATE INDEX IF NOT EXISTS member_photos_member_idx ON member_photos(member_id, created_at, id);`);
   await pool.query("ALTER TABLE videos ADD COLUMN IF NOT EXISTS storage_key TEXT");
@@ -578,13 +579,32 @@ app.patch("/api/me", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+app.patch("/api/me/location", requireAuth, async (req, res, next) => {
+  try {
+    const latitude = Number(req.body?.latitude), longitude = Number(req.body?.longitude);
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+      return res.status(400).json({ error: "Please allow location access and try again." });
+    }
+    await pool.query("UPDATE members SET latitude=$1,longitude=$2 WHERE id=$3", [latitude, longitude, req.session.memberId]);
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
 app.get("/api/discover", requireAuth, async (req, res, next) => {
   try {
     res.set("Cache-Control", "private, no-store, max-age=0");
     const r = await pool.query(`
       SELECT m.id,m.display_name,m.country,m.bio,m.looking_for,
+             CASE WHEN viewer.latitude IS NOT NULL AND viewer.longitude IS NOT NULL
+                       AND m.latitude IS NOT NULL AND m.longitude IS NOT NULL
+                  THEN ROUND((6371 * acos(LEAST(1.0, GREATEST(-1.0,
+                    sin(radians(viewer.latitude))*sin(radians(m.latitude)) +
+                    cos(radians(viewer.latitude))*cos(radians(m.latitude))*cos(radians(m.longitude-viewer.longitude))
+                  ))))::numeric, 1)
+                  ELSE NULL END AS distance_km,
              EXISTS (SELECT 1 FROM likes l WHERE l.from_member=$1 AND l.to_member=m.id) AS liked
       FROM members m
+      CROSS JOIN (SELECT latitude,longitude FROM members WHERE id=$1) viewer
       WHERE m.id <> $1
         AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=m.id) OR (b.blocker_id=m.id AND b.blocked_id=$1))
       ORDER BY m.created_at DESC LIMIT 50
@@ -595,7 +615,7 @@ app.get("/api/discover", requireAuth, async (req, res, next) => {
       const v = await pool.query("SELECT DISTINCT ON(member_id) member_id,id,duration_seconds FROM videos WHERE member_id = ANY($1::bigint[]) ORDER BY member_id,created_at DESC", [ids]);
       videoRows = v.rows;
     }
-    res.json({ members: r.rows.map(m => ({ ...publicMember(m), liked: Boolean(m.liked), hasVideo: videoRows.some(v => String(v.member_id) === String(m.id)), videoId: (videoRows.find(v => String(v.member_id) === String(m.id)) || {}).id || null })) });
+    res.json({ members: r.rows.map(m => ({ ...publicMember(m), distanceKm: m.distance_km == null ? null : Number(m.distance_km), liked: Boolean(m.liked), hasVideo: videoRows.some(v => String(v.member_id) === String(m.id)), videoId: (videoRows.find(v => String(v.member_id) === String(m.id)) || {}).id || null })) });
   } catch (err) { next(err); }
 });
 
