@@ -596,6 +596,20 @@ app.get("/api/discover", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+app.get("/api/likes/mine", requireAuth, async (req, res, next) => {
+  try {
+    const r = await pool.query(`
+      SELECT m.id,m.display_name,m.country,m.bio,m.looking_for,l.created_at
+      FROM likes l JOIN members m ON m.id=l.to_member
+      WHERE l.from_member=$1
+        AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=m.id) OR (b.blocker_id=m.id AND b.blocked_id=$1))
+      ORDER BY l.created_at DESC LIMIT 100
+    `, [req.session.memberId]);
+    res.set("Cache-Control", "private, no-store, max-age=0");
+    res.json({ likes: r.rows.map(publicMember) });
+  } catch (err) { next(err); }
+});
+
 app.post("/api/likes/:memberId", requireAuth, async (req, res, next) => {
   const client = await pool.connect();
   try {
