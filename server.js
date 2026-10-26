@@ -707,7 +707,7 @@ app.post("/api/messages/:memberId", requireAuth, requireActiveSubscription, asyn
   try {
     const me = String(req.session.memberId), other = String(req.params.memberId);
     const body = String(req.body?.body || "").trim();
-    if (!body || body.length > 2000) return res.status(400).json({ error: "Message must be 1–2000 characters." });
+    if (!body || body.length > 180000) return res.status(400).json({ error: "Message or voice note is too large. Please send a shorter message or voice note." });
     const match = await pool.query("SELECT 1 FROM matches WHERE (member_a=$1 AND member_b=$2) OR (member_a=$2 AND member_b=$1)", [me,other]);
     if (!match.rowCount) return res.status(403).json({ error: "Private messaging is available only between matches." });
     const blocked = await pool.query("SELECT 1 FROM member_blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1)", [me,other]);
