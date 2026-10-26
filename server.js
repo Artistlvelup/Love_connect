@@ -546,7 +546,10 @@ app.post("/api/auth/login", async (req, res, next) => {
     req.session.regenerate(err => {
       if (err) return next(err);
       req.session.memberId = result.rows[0].id;
-      res.json({ member: publicMember(result.rows[0]) });
+      req.session.save(saveErr => {
+        if (saveErr) return next(saveErr);
+        res.json({ member: publicMember(result.rows[0]) });
+      });
     });
   } catch (err) { next(err); }
 });
