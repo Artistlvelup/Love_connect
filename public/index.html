@@ -384,6 +384,26 @@ button.soft{background:#454064!important;color:#f1eaff!important}
 /* Auth screen repair: keep the fixed mobile bar completely off the sign-up/login screen. */
 @media(max-width:700px){#mobileNav.mobile-nav.auth-hidden{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}}
 </style>
+<script>
+/* Independent fallback for the login/register switch on mobile. */
+document.addEventListener("click",function(e){
+  const button=e.target.closest&&e.target.closest("#switchAuth");
+  if(!button)return;
+  const fields=document.getElementById("registerFields");
+  const title=document.getElementById("authTitle");
+  const submit=document.getElementById("authSubmit");
+  const consent=document.getElementById("adultConsent");
+  if(!fields||!title||!submit)return;
+  const switchingToLogin=!fields.classList.contains("hidden");
+  fields.classList.toggle("hidden",switchingToLogin);
+  ["displayName","birthDate","country"].forEach(function(id){const el=document.getElementById(id);if(el)el.required=!switchingToLogin;});
+  if(consent){consent.required=!switchingToLogin;const label=consent.closest("label");if(label)label.classList.toggle("hidden",switchingToLogin);}
+  title.textContent=switchingToLogin?"Welcome back":"Create your account";
+  submit.textContent=switchingToLogin?"Log in":"Create account";
+  button.textContent=switchingToLogin?"New to Love Connect? Join free":"Already a member? Log in";
+  const password=document.getElementById("password");if(password){password.minLength=switchingToLogin?1:10;password.autocomplete=switchingToLogin?"current-password":"new-password";}
+},{capture:true});
+</script>
 </head>
 <body>
 <header class="top"><div class="wrap topin"><div class="brand">♡ Love<span>Connect</span></div><nav id="nav" class="hidden"><button class="active" data-page="discover">Discover</button><button data-page="video">Video feed</button><button data-page="matches">Matches</button><button data-page="messages">Messages</button><button data-page="calls">Video calls</button><button data-page="profile">My profile</button><button data-page="plans">Plans</button><button data-page="advertise">Advertise</button></nav><div id="accountActions"><button class="soft" id="showLogin">Log in</button> <button class="primary" id="showRegister">Join free</button></div></div></header>
