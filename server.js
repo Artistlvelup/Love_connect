@@ -552,6 +552,7 @@ app.patch("/api/me", requireAuth, async (req, res, next) => {
 
 app.get("/api/discover", requireAuth, async (req, res, next) => {
   try {
+    res.set("Cache-Control", "private, no-store, max-age=0");
     const r = await pool.query(`
       SELECT m.id,m.display_name,m.country,m.bio,m.looking_for
       FROM members m
