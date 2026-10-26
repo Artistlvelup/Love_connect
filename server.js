@@ -503,8 +503,14 @@ app.post("/api/auth/register", async (req, res, next) => {
       "INSERT INTO members(email,password_hash,display_name,birth_date,country,looking_for) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,email,display_name,country,bio,looking_for",
       [email.toLowerCase().trim(), hash, displayName.trim(), birthDate, String(country || "").slice(0, 80), String(req.body?.lookingFor || "Connections").slice(0, 80)]
     );
-    req.session.memberId = result.rows[0].id;
-    res.status(201).json({ member: publicMember(result.rows[0]) });
+    req.session.regenerate(err => {
+      if (err) return next(err);
+      req.session.memberId = result.rows[0].id;
+      req.session.save(saveErr => {
+        if (saveErr) return next(saveErr);
+        res.status(201).json({ member: publicMember(result.rows[0]) });
+      });
+    });
   } catch (err) {
     if (err.code === "23505") return res.status(409).json({ error: "That email already has an account." });
     next(err);
