@@ -635,7 +635,9 @@ list.textContent="No matches yet. When you and another member like each other, t
 return;
 }
 list.className="chatlist";
-list.innerHTML=d.matches.map(m=>'<button type="button" class="message-inbox-row" data-open-message="'+m.id+'"><span class="message-inbox-avatar">'+(m.photoUrl?'<img loading="lazy" alt="" src="'+escapeHtml(m.photoUrl)+'">':escapeHtml((m.displayName||"?").trim().charAt(0).toUpperCase()))+'</span><span class="message-inbox-copy"><strong>'+escapeHtml(m.displayName)+'</strong><span class="message-inbox-preview">'+escapeHtml(m.country||"Open conversation")+'</span></span><span class="message-inbox-chevron">›</span></button>').join("");
+const previews=await Promise.all(d.matches.map(async m=>{try{const conversation=await api("/api/messages/"+m.id);const items=conversation.messages||[];return [String(m.id),items.length?items[items.length-1].body:"Start a conversation"]}catch(_){return [String(m.id),"Tap to open conversation"]}}));
+const previewById=new Map(previews);
+list.innerHTML=d.matches.map(m=>'<button type="button" class="message-inbox-row" data-open-message="'+m.id+'"><span class="message-inbox-avatar">'+(m.photoUrl?'<img loading="lazy" alt="" src="'+escapeHtml(m.photoUrl)+'">':escapeHtml((m.displayName||"?").trim().charAt(0).toUpperCase()))+'</span><span class="message-inbox-copy"><strong>'+escapeHtml(m.displayName)+'</strong><span class="message-inbox-preview">'+escapeHtml(previewById.get(String(m.id))||"Tap to open conversation")+'</span></span><span class="message-inbox-chevron">›</span></button>').join("");
 document.querySelectorAll("[data-open-message]").forEach(b=>b.onclick=()=>openChat(d.matches.find(m=>String(m.id)===b.dataset.openMessage)));
 }catch(e){messagesStatus(e.message,true)}
 }
