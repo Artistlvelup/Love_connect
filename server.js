@@ -159,8 +159,22 @@ function requireAuth(req, res, next) {
   if (!req.session.memberId) return res.status(401).json({ error: "Please log in first." });
   next();
 }
+const LAUNCH_FREE_MEMBER_LIMIT = 2000;
+function launchFreeAccessEnabled() {
+  return String(process.env.LAUNCH_FREE_ACCESS || "true").toLowerCase() !== "false";
+}
+async function getLaunchAccessStatus() {
+  const r = await pool.query("SELECT COUNT(*)::int AS count FROM members");
+  return {
+    launchFreeAccess: launchFreeAccessEnabled(),
+    registeredMembers: Number(r.rows[0]?.count || 0),
+    launchFreeMemberLimit: LAUNCH_FREE_MEMBER_LIMIT
+  };
+}
 async function requireActiveSubscription(req, res, next) {
   try {
+    const launch = await getLaunchAccessStatus();
+    if (launch.launchFreeAccess) return next();
     const r = await pool.query(
       "SELECT 1 FROM subscriptions WHERE member_id=$1 AND status='active' AND (ends_at IS NULL OR ends_at > now()) ORDER BY created_at DESC LIMIT 1",
       [req.session.memberId]
@@ -396,8 +410,9 @@ app.get("/api/subscription", requireAuth, async (req, res, next) => {
       [req.session.memberId]
     );
     const subscription = r.rows[0] || null;
-    const active = !!subscription && subscription.status === "active" && (!subscription.ends_at || new Date(subscription.ends_at) > new Date());
-    res.json({ active, subscription, paidFeatures: ["video_uploads", "private_messaging", "video_calls"], paymentsConnected: paystackConfigured() });
+    const launch = await getLaunchAccessStatus();
+    const subscriptionActive = !!subscription && subscription.status === "active" && (!subscription.ends_at || new Date(subscription.ends_at) > new Date());
+    res.json({ active: launch.launchFreeAccess || subscriptionActive, subscription, paidFeatures: ["video_uploads", "private_messaging", "video_calls"], paymentsConnected: paystackConfigured(), ...launch });
   } catch (err) { next(err); }
 });
 
