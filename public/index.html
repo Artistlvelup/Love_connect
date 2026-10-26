@@ -691,7 +691,7 @@ let discoverMembers=[],activeDiscoverFilter="all";
 let passedDiscoverIds=new Set();
 function renderDiscoverFeed(){
  const q=($("peopleSearch")?.value||"").trim().toLowerCase();let list=[...discoverMembers];
- if(activeDiscoverFilter==="nearby")list=list.filter(m=>me?.country&&m.country&&m.country.toLowerCase()===me.country.toLowerCase());
+ if(activeDiscoverFilter==="nearby")list=list.filter(m=>Number.isFinite(m.distanceKm)&&m.distanceKm<=50);
  if(activeDiscoverFilter==="new")list=list.slice(0,15);
  if(activeDiscoverFilter==="interests"){const goal=String(me?.lookingFor||"").toLowerCase();const words=String(me?.bio||"").toLowerCase().split(/[^a-z0-9]+/).filter(w=>w.length>3);list=list.filter(m=>(goal&&String(m.lookingFor||"").toLowerCase()===goal)||words.some(w=>(String(m.bio||"")+" "+String(m.lookingFor||"")).toLowerCase().includes(w)));}
  if(q)list=list.filter(m=>(m.displayName+" "+(m.country||"")+" "+(m.bio||"")+" "+(m.lookingFor||"")).toLowerCase().includes(q));
