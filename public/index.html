@@ -524,6 +524,50 @@ body:has(#app:not(.hidden)) .landing-hero{display:none!important}
 #page-discover .swipe-empty p{color:#77758a;line-height:1.6}
 @media(max-width:600px){#page-discover #feed{min-height:0;margin-top:12px}#page-discover .swipe-stage{height:min(690px,calc(100dvh - 220px));min-height:455px;width:100%}#page-discover .swipe-profile{border-radius:22px}#page-discover .swipe-profile-info{padding:13px 14px 11px}#page-discover .swipe-buttons{gap:20px}}
 
+
+/* Tinder-inspired full-screen discovery layout */
+#page-discover{background:#080808!important;color:#fff!important;margin-left:calc((100% - 100vw)/2)!important;margin-right:calc((100% - 100vw)/2)!important;padding:0 0 18px!important;min-height:calc(100dvh - 70px)}
+#page-discover .discover-heading{padding:18px 18px 8px!important;margin:0!important;background:#080808!important;border-radius:0!important;box-shadow:none!important}
+#page-discover .discover-heading h1{font-size:1.55rem!important;color:#fff!important;margin:0!important}
+#page-discover .discover-heading p{font-size:.82rem!important;color:#c7c7c7!important;margin:4px 0 0!important}
+#page-discover .filter-row,#page-discover .story-row{display:none!important}
+#page-discover #feed{display:block!important;width:100%!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important}
+#page-discover .swipe-stage{width:100%!important;max-width:620px!important;height:calc(100dvh - 190px)!important;min-height:490px!important;margin:0 auto!important;border-radius:0!important}
+#page-discover .swipe-profile{inset:0!important;border:0!important;border-radius:0!important;background:#080808!important;box-shadow:none!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+#page-discover .swipe-photo{flex:1 1 auto!important;min-height:0!important;background-position:center 30%!important;background-size:cover!important}
+#page-discover .swipe-photo-shade{inset:35% 0 0!important;background:linear-gradient(transparent 0%,#09090920 30%,#090909f2 100%)!important}
+#page-discover .swipe-photo-caption{padding:20px 20px 22px!important;gap:10px!important}
+#page-discover .swipe-photo-caption h2{font-size:clamp(2rem,7vw,2.8rem)!important;text-shadow:0 2px 12px #0009}
+#page-discover .swipe-photo-caption p{font-size:.9rem!important}
+#page-discover .swipe-photo-hint{display:none!important}
+#page-discover .swipe-profile-info{flex:0 0 auto!important;padding:12px 18px 16px!important;background:#101112!important;color:#fff!important;border-radius:0 0 28px 28px!important}
+#page-discover .swipe-goal{background:#28212b!important;color:#ffc4e7!important}
+#page-discover .swipe-profile-info>p{color:#dedede!important;margin:7px 2px 12px!important}
+#page-discover .swipe-buttons{gap:clamp(14px,4vw,25px)!important;padding:2px 0 0!important}
+#page-discover .swipe-buttons button{background:#242528!important;color:#fff!important;border:1px solid #3a3b3e!important;box-shadow:0 3px 10px #0007!important}
+#page-discover .swipe-pass{width:clamp(58px,16vw,78px)!important;height:clamp(58px,16vw,78px)!important;color:#fff!important;font-size:2.7rem!important}
+#page-discover .swipe-details{width:48px!important;height:48px!important;color:#a9bdf9!important}
+#page-discover .swipe-like{width:clamp(68px,18vw,88px)!important;height:clamp(68px,18vw,88px)!important;background:#ef222c!important;border:0!important;color:#fff!important;font-size:2.7rem!important}
+#page-discover .swipe-help{color:#aaa!important;margin:8px 0 0!important}
+#page-discover .swipe-empty,#page-discover .empty-people-card{width:100%!important;max-width:620px!important;min-height:0!important;margin:0 auto!important;padding:24px 20px!important;border:0!important;border-radius:0!important;background:#101112!important;color:#fff!important;box-shadow:none!important;text-align:center!important}
+#page-discover .swipe-empty-heart,#page-discover .empty-people-heart{width:auto!important;height:auto!important;display:block!important;margin:0 auto 8px!important;background:transparent!important;color:#ff4d86!important;font-size:2.5rem!important}
+#page-discover .swipe-empty h3,#page-discover .empty-people-card h3{color:#fff!important;margin:4px 0 8px!important}
+#page-discover .swipe-empty p,#page-discover .empty-people-copy,#page-discover .empty-people-note{color:#c3c3c3!important;line-height:1.5!important}
+#page-discover .empty-people-kicker{color:#ff91c6!important}
+#page-discover .swipe-empty .primary,#page-discover .empty-people-card .primary{border-radius:999px!important;background:#e94a9b!important;color:#fff!important}
+@media(max-width:600px){
+ body{background:#080808!important}
+ #page-discover{width:100vw!important;max-width:100vw!important;margin:0 calc((100% - 100vw)/2)!important;padding-bottom:8px!important;min-height:calc(100dvh - 56px)!important}
+ #page-discover .discover-heading{padding:12px 16px 8px!important}
+ #page-discover .discover-heading h1{font-size:1.3rem!important}
+ #page-discover .discover-heading p{display:none!important}
+ #page-discover .swipe-stage{height:calc(100dvh - 160px)!important;min-height:480px!important;width:100%!important}
+ #page-discover .swipe-profile-info{padding:10px 16px calc(12px + env(safe-area-inset-bottom))!important}
+ #page-discover .swipe-photo-caption{padding:18px 18px 15px!important}
+ #page-discover .swipe-profile-info>p{-webkit-line-clamp:1!important;margin:6px 2px 9px!important}
+ #page-discover .swipe-help{font-size:.68rem!important}
+}
+
 </style>
 
 </head>
