@@ -199,6 +199,10 @@ function validAdultDate(value) {
 }
 
 app.get("/api/health", (_req, res) => res.json({ ok: true, service: "Love Connect API" }));
+app.get("/api/launch-status", async (_req, res, next) => {
+  try { res.set("Cache-Control", "no-store"); res.json(await getLaunchAccessStatus()); }
+  catch (err) { next(err); }
+});
 
 const paidPlans = {
   monthly: { amount: 200000, days: 30, label: "Monthly" },
@@ -575,7 +579,8 @@ app.get("/api/discover", requireAuth, async (req, res, next) => {
   try {
     res.set("Cache-Control", "private, no-store, max-age=0");
     const r = await pool.query(`
-      SELECT m.id,m.display_name,m.country,m.bio,m.looking_for
+      SELECT m.id,m.display_name,m.country,m.bio,m.looking_for,
+             EXISTS (SELECT 1 FROM likes l WHERE l.from_member=$1 AND l.to_member=m.id) AS liked
       FROM members m
       WHERE m.id <> $1
         AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=m.id) OR (b.blocker_id=m.id AND b.blocked_id=$1))
@@ -587,7 +592,7 @@ app.get("/api/discover", requireAuth, async (req, res, next) => {
       const v = await pool.query("SELECT DISTINCT ON(member_id) member_id,id,duration_seconds FROM videos WHERE member_id = ANY($1::bigint[]) ORDER BY member_id,created_at DESC", [ids]);
       videoRows = v.rows;
     }
-    res.json({ members: r.rows.map(m => ({ ...publicMember(m), hasVideo: videoRows.some(v => String(v.member_id) === String(m.id)), videoId: (videoRows.find(v => String(v.member_id) === String(m.id)) || {}).id || null })) });
+    res.json({ members: r.rows.map(m => ({ ...publicMember(m), liked: Boolean(m.liked), hasVideo: videoRows.some(v => String(v.member_id) === String(m.id)), videoId: (videoRows.find(v => String(v.member_id) === String(m.id)) || {}).id || null })) });
   } catch (err) { next(err); }
 });
 
