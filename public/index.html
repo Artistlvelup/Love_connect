@@ -476,6 +476,30 @@ function renderDiscoverFeed(){
  $("feed").querySelectorAll("[data-block]").forEach(b=>b.onclick=async()=>{if(!confirm("Block this member?"))return;try{await api("/api/members/"+b.dataset.block+"/block",{method:"POST",body:"{}"});say("Member blocked.");loadFeed()}catch(e){say(e.message,true)}});
  loadApprovedAds($("feed"));
 }
+async function openDiscoverProfile(m){
+ if(!m)return;
+ document.getElementById("discoverProfileModal")?.remove();
+ const modal=document.createElement("div");modal.id="discoverProfileModal";modal.setAttribute("role","dialog");modal.setAttribute("aria-modal","true");modal.setAttribute("aria-label","Member profile");
+ modal.style.cssText="position:fixed;inset:0;z-index:2147483647;background:rgba(8,12,30,.86);display:flex;align-items:center;justify-content:center;padding:12px;overflow:auto";
+ modal.innerHTML='<div style="position:relative;width:min(100%,480px);max-height:94vh;overflow:auto;background:#17171b;color:#fff;border:1px solid #333;border-radius:22px;padding:18px"><button type="button" id="closeDiscoverProfile" style="float:right">✕ Close</button><h2 style="margin:28px 0 8px">'+escapeHtml(m.displayName)+'</h2><p class="small muted">'+escapeHtml(m.country||"")+'</p><div id="discoverModalGallery" aria-label="Swipe through profile photos"><p class="small muted">Loading photos…</p></div><p class="small muted">Swipe left or right to see all photos.</p><p><strong>Looking for</strong><br>'+escapeHtml(m.lookingFor||"Connections")+'</p><p>'+escapeHtml(m.bio||"This member has not added a bio yet.")+'</p><button class="primary" id="modalLikeMember" style="width:100%">♡ Like profile</button></div>';
+ document.body.appendChild(modal);modal.querySelector("#closeDiscoverProfile").onclick=()=>modal.remove();modal.onclick=e=>{if(e.target===modal)modal.remove()};
+ try{
+  const d=await api("/api/members/"+encodeURIComponent(m.id)+"/photos");const photos=d.photos||[];const holder=modal.querySelector("#discoverModalGallery");
+  if(!photos.length){holder.innerHTML=m.photoUrl?'<img alt="Profile photo" src="'+escapeHtml(m.photoUrl)+'?fresh='+Date.now()+'" style="width:100%;max-height:55vh;object-fit:contain">':'<p class="small muted">No photos uploaded yet.</p>';}
+  else{
+   let n=0;holder.innerHTML='<div id="discoverGallerySlide" style="position:relative;overflow:hidden;touch-action:pan-y"><img id="discoverGalleryImage" src="'+escapeHtml(photos[0].url)+'?fresh='+Date.now()+'" alt="Photo 1" style="width:100%;display:block;object-fit:contain;max-height:55vh"><span class="photo-count" id="discoverGalleryCount">1 / '+photos.length+'</span></div>'+(photos.length>1?'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0"><button type="button" id="discoverPhotoPrev" class="soft">← Previous</button><span class="small muted">Swipe photos</span><button type="button" id="discoverPhotoNext" class="soft">Next →</button></div>':'');
+   const paint=()=>{const img=holder.querySelector("#discoverGalleryImage");img.src=photos[n].url+'?fresh='+Date.now();img.alt='Photo '+(n+1)+' of '+escapeHtml(m.displayName);holder.querySelector("#discoverGalleryCount").textContent=(n+1)+' / '+photos.length;};
+   const prev=()=>{n=(n+photos.length-1)%photos.length;paint()},next=()=>{n=(n+1)%photos.length;paint()};
+   holder.querySelector("#discoverGalleryImage").onclick=()=>openPhotoLightbox(photos,n);
+   holder.querySelector("#discoverPhotoPrev")?.addEventListener("click",prev);holder.querySelector("#discoverPhotoNext")?.addEventListener("click",next);
+   const slide=holder.querySelector("#discoverGallerySlide");let sx=0,sy=0;
+   slide.addEventListener("touchstart",e=>{sx=e.changedTouches[0].clientX;sy=e.changedTouches[0].clientY},{passive:true});
+   slide.addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)){e.preventDefault();dx<0?next():prev();}},{passive:false});
+  }
+ }catch(e){modal.querySelector("#discoverModalGallery").innerHTML='<p class="small muted">Photos could not be loaded. Please try again.</p>';}
+ modal.querySelector("#modalLikeMember").onclick=async()=>{const b=modal.querySelector("#modalLikeMember");b.disabled=true;b.textContent="Sending…";try{const r=await api("/api/likes/"+encodeURIComponent(m.id),{method:"POST",body:"{}"});say(r.matched?"It’s a match! You can message each other now.":"Like sent.");b.textContent="♥ Liked";}catch(e){say(e.message,true);b.disabled=false;b.textContent="♡ Like profile";}};
+ const esc=e=>{if(e.key==="Escape"){modal.remove();document.removeEventListener("keydown",esc)}};document.addEventListener("keydown",esc);
+}
 async function loadFeed(){if(!me)return;try{const d=await api("/api/discover");discoverMembers=d.members||[];renderDiscoverFeed()}catch(e){say(e.message,true)}}
 async function loadMyDiscoverPosts(){
  const photosBox=$("myDiscoverPhotos"),videosBox=$("myDiscoverVideos");
