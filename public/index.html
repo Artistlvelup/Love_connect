@@ -417,13 +417,100 @@ button.soft{background:#454064!important;color:#f1eaff!important}
 /* Messages inbox and chat room */
 .messages-panel{min-height:60vh}#page-messages.chat-room-open #messagesInbox{display:none}.message-inbox-row{display:flex;width:100%;align-items:center;gap:13px;text-align:left;padding:13px 10px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;color:var(--ink);box-shadow:none;transform:none}.message-inbox-row:hover{background:#ffffff0b;transform:none}.message-inbox-avatar,.chat-header-avatar{display:grid;place-items:center;flex:0 0 52px;width:52px;height:52px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#f7d3e5,#bba4e9);color:#52204f;font-weight:800;font-size:1.25rem}.message-inbox-avatar img,.chat-header-avatar img{width:100%;height:100%;object-fit:cover}.message-inbox-copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:3px}.message-inbox-copy strong{font-size:1rem}.message-inbox-preview{font-size:.87rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.message-inbox-chevron{font-size:1.6rem;color:var(--muted)}.chat-room-toolbar{display:flex;align-items:center;gap:12px;padding:4px 0 14px;border-bottom:1px solid var(--line)}.chat-room-person{display:flex;align-items:center;gap:10px;min-width:0;flex:1}.chat-room-person h3{margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chat-header-avatar{flex-basis:42px;width:42px;height:42px;font-size:1rem}.chat-video-call-button{flex:0 0 46px;width:46px;height:46px;padding:0;border-radius:50%;display:grid;place-items:center;background:#16865d;color:white;font-size:1.25rem;box-shadow:0 4px 12px #16865d33}.chat-history{min-height:160px;max-height:48vh;overflow:auto;margin:14px 0;padding:12px}.chat-history p{padding:10px 12px;background:#ffffff0b;border-radius:12px;margin:8px 0}.chat-compose{display:flex;align-items:flex-end;gap:9px;margin-top:12px}.chat-compose textarea{flex:1;min-width:0;min-height:46px;max-height:120px;resize:vertical;border:1px solid var(--line);border-radius:22px;padding:12px 15px;background:var(--panel,#2b3552);color:var(--ink)}.chat-compose button{width:48px;height:48px;flex:0 0 48px;padding:0;border-radius:50%;font-size:1.15rem}.chat-safety-actions{justify-content:flex-end}.chat-safety-actions button{font-size:.8rem;padding:7px 10px}.call-stage{width:100%;height:min(56vh,620px);min-height:300px}.call-stage.hidden{display:none!important}#page-messages.call-active .chat-room-toolbar,#page-messages.call-active #chatSafetyStatus,#page-messages.call-active .chat-safety-actions,#page-messages.call-active .chat-history,#page-messages.call-active .chat-compose{visibility:hidden}#page-messages.call-active .call-stage{position:fixed;inset:0;z-index:2147482000;width:100vw;height:100dvh;max-height:none;min-height:0;border-radius:0}@media(max-width:700px){.messages-panel{padding:12px}.message-inbox-row{padding:12px 4px}.message-inbox-avatar{width:50px;height:50px;flex-basis:50px}.chat-history{max-height:42vh}.call-stage{min-height:280px}}
 .voice-note-button{width:48px;height:48px;flex:0 0 48px;padding:0;border-radius:50%;display:grid;place-items:center;background:#24344c;color:white;font-size:1.15rem}.voice-note-button.recording{background:#c92854;animation:voicePulse 1s infinite alternate}.voice-note-status{min-height:1.2em;margin:5px 4px 0}.voice-note-message{display:flex;flex-direction:column;gap:7px;max-width:100%;font-weight:600}.voice-note-message audio{width:min(280px,100%);height:38px}.chat-history p audio{vertical-align:middle}@keyframes voicePulse{from{opacity:1}to{opacity:.6}}
+
+/* Love Connect homepage + discovery redesign (scoped; existing app behavior preserved) */
+.landing-hero{position:relative;display:grid;grid-template-columns:minmax(0,1.03fr) minmax(320px,.97fr);align-items:center;gap:clamp(24px,5vw,66px);min-height:500px;padding:clamp(34px,6vw,72px) clamp(0px,1vw,10px) 48px;isolation:isolate}
+.landing-copy{position:relative;z-index:2;max-width:610px}
+.landing-eyebrow{display:inline-flex;align-items:center;gap:9px;margin-bottom:22px;padding:8px 13px;border:1px solid rgba(255,255,255,.24);border-radius:999px;background:rgba(255,255,255,.08);color:#f8d9ea;font-size:.72rem;font-weight:850;letter-spacing:.12em}
+.landing-live-dot{width:8px;height:8px;border-radius:50%;background:#ff789d;box-shadow:0 0 0 4px #ff789d25}
+.landing-hero h1{max-width:680px;margin:0;color:#fff;font-size:clamp(2.7rem,5.5vw,5rem);font-weight:850;line-height:.99;letter-spacing:-.065em}
+.landing-hero h1 span{display:block;margin-top:8px;background:linear-gradient(100deg,#ff8cb2 0%,#c7a7ff 58%,#7ce5d6 100%);background-clip:text;-webkit-background-clip:text;color:transparent}
+.landing-hero .landing-copy>p{max-width:490px;margin:22px 0 0;color:#d9e0f7;font-size:1.06rem;line-height:1.8}
+.landing-actions{display:flex;align-items:center;flex-wrap:wrap;gap:18px;margin-top:28px}
+.landing-join{display:inline-flex;align-items:center;justify-content:center;gap:18px;min-height:54px;padding:15px 21px!important;border-radius:15px!important;font-size:1rem;box-shadow:0 12px 30px #ff668f38!important}
+.landing-join span{font-size:1.25rem;line-height:1}
+.landing-secondary{color:#e4e7fb;text-decoration:none;font-size:.92rem}
+.landing-secondary strong{color:#ff9cbd;text-decoration:underline;text-underline-offset:4px}
+.landing-trust{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:25px;color:#c4cde8;font-size:.78rem}
+.landing-trust span:first-child{color:#f3d5e8}
+.landing-visual{position:relative;min-height:420px;max-width:520px;width:100%;margin-inline:auto}
+.landing-visual:before{content:"";position:absolute;inset:7% 5% 8%;border-radius:48% 52% 43% 57%;background:linear-gradient(140deg,#ff668f35,#8b5cf635 54%,#14b8a635);filter:blur(2px)}
+.landing-photo{position:absolute;overflow:hidden;border:4px solid rgba(255,255,255,.88);border-radius:28px;background:#d6d9ed;box-shadow:0 24px 60px #070d2450}
+.landing-photo img{display:block;width:100%;height:100%;object-fit:cover}
+.landing-photo-main{inset:3% 17% 5% 13%;transform:rotate(-3deg);border-radius:34px}
+.landing-photo-main:after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,#10172bd9)}
+.landing-photo-label{position:absolute;z-index:1;left:20px;right:18px;bottom:19px;display:flex;flex-direction:column;gap:3px;color:#fff}
+.landing-photo-label b{font-size:1.15rem;letter-spacing:-.025em}.landing-photo-label small{font-size:.82rem;color:#f3e8f4}
+.landing-photo-top{width:31%;height:35%;right:0;top:1%;transform:rotate(7deg);border-radius:23px}
+.landing-photo-bottom{width:34%;height:34%;left:0;bottom:0;transform:rotate(6deg);border-radius:23px}
+.landing-heart-float{position:absolute;right:1%;bottom:22%;display:grid;place-items:center;width:62px;height:62px;border:1px solid #ffffffa8;border-radius:21px;background:linear-gradient(135deg,#ff668f,#8b5cf6);color:#fff;font-size:2.2rem;box-shadow:0 16px 35px #0a102b55;transform:rotate(8deg)}
+.landing-note{position:absolute;right:0;bottom:3%;display:flex;align-items:center;gap:10px;max-width:245px;padding:13px 15px;border:1px solid #ffffff35;border-radius:17px;background:#17213feF;color:#fff;box-shadow:0 14px 38px #080d2850}
+.landing-note-icon{display:grid;place-items:center;flex:0 0 35px;height:35px;border-radius:12px;background:#ffffff19;color:#8fe9dc;font-size:1.25rem}
+.landing-note span:last-child{display:flex;flex-direction:column;gap:2px}.landing-note b{font-size:.8rem}.landing-note small{font-size:.72rem;color:#cbd4ee}
+body:has(#app:not(.hidden)) .landing-hero{display:none!important}
+#auth{scroll-margin-top:24px}
+#page-discover .discover-toolbar{align-items:stretch}
+#page-discover .discover-search{min-height:48px;border-radius:15px;box-shadow:0 5px 18px #080d2412}
+#page-discover .discover-heading{position:relative;overflow:hidden;padding:clamp(22px,4vw,34px);border:1px solid #ffffff35;border-radius:26px;background:linear-gradient(115deg,#ff668f 0%,#7652d6 53%,#14a99a 100%);box-shadow:0 16px 34px #090f2b28}
+#page-discover .discover-heading:after{content:"♡";position:absolute;right:22px;bottom:-45px;color:#ffffff24;font-size:10rem;line-height:1;pointer-events:none}
+#page-discover .discover-heading h1{position:relative;z-index:1;max-width:620px;font-size:clamp(1.8rem,4.3vw,2.7rem);letter-spacing:-.055em}
+#page-discover .discover-heading p{position:relative;z-index:1;max-width:520px;margin-top:8px;color:#fff;font-size:.98rem}
+#page-discover .filter-row{background:#ffffff12;border-color:#ffffff2b;box-shadow:0 8px 22px #080d2410}
+#page-discover .filter-chip{border-radius:999px;padding:10px 15px;font-weight:750}
+#page-discover .filter-chip.active{box-shadow:0 4px 12px #17133a22}
+#page-discover .story-row{gap:17px;padding:10px 3px 20px}
+#page-discover .story{color:#e6eaf8}
+#page-discover .story-ring{width:66px;height:66px}
+#page-discover .person{border:1px solid #dce2f5;border-radius:23px;background:#fff;box-shadow:0 12px 34px #050b221f;transition:box-shadow .18s,border-color .18s}
+#page-discover .person .portrait{position:relative;height:clamp(270px,31vw,360px);overflow:hidden;background:linear-gradient(145deg,#ffd8e8,#c8b8f6 55%,#b3eee2);cursor:pointer}
+#page-discover .person .portrait img{width:100%;height:100%;object-fit:cover;transition:transform .35s}
+#page-discover .person .portrait:after{content:"";position:absolute;inset:42% 0 0;background:linear-gradient(transparent,#10172b4d);pointer-events:none}
+#page-discover .person .portrait .photo-count{z-index:1;left:auto;right:10px;bottom:10px;background:#10172bd9}
+#page-discover .personbody{padding:17px 17px 16px}
+#page-discover .personbody h3{font-size:1.18rem;letter-spacing:-.035em}
+#page-discover .personbody h3 button{font-weight:850}
+#page-discover .personbody>p{margin:8px 0 11px;line-height:1.55;color:#667087}
+#page-discover .personbody .pill{display:inline-flex;margin:0 0 2px;padding:6px 10px;border-radius:999px;background:#f0eaff;color:#5937a6;font-size:.75rem}
+#page-discover .personbody .actions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:15px}
+#page-discover .personbody .actions button{min-height:43px;border-radius:13px}
+#page-discover .personbody .actions button[data-like]{min-width:0}
+#page-discover .personbody .actions button[data-report]{padding:9px 12px;background:#f4f5fb;color:#69738b;font-size:.82rem}
+#page-discover .personbody>button[data-block]{display:inline-flex!important;width:auto!important;min-height:32px;margin-top:8px!important;padding:5px 0!important;background:transparent!important;color:#8b526a!important;font-size:.75rem!important;font-weight:650;box-shadow:none!important;text-align:left}
+#page-discover .empty-people-card{padding:clamp(28px,5vw,48px);border:1px solid #dce2f5;border-radius:26px;background:linear-gradient(135deg,#fff,#f1edff 58%,#e6fbf7);text-align:center;color:#182238;box-shadow:0 15px 38px #050b2218}
+#page-discover .empty-people-heart{display:grid;place-items:center;width:70px;height:70px;margin:0 auto 14px;border-radius:22px;background:linear-gradient(135deg,#ff668f,#7652d6);color:#fff;font-size:2.6rem}
+#page-discover .empty-people-kicker{margin:0 0 6px;color:#7652d6;font-size:.75rem;font-weight:850;letter-spacing:.15em}
+#page-discover .empty-people-card h3{margin:0 0 8px;font-size:clamp(1.5rem,4vw,2rem);letter-spacing:-.045em}
+#page-discover .empty-people-copy{max-width:470px;margin:0 auto 18px;color:#65718a;line-height:1.7}
+#page-discover .empty-people-note{margin:12px 0 0;color:#778199;font-size:.78rem}
+@media(max-width:900px){.landing-hero{grid-template-columns:minmax(0,1fr) minmax(270px,.85fr);gap:24px;min-height:430px}.landing-visual{min-height:365px}.landing-hero h1{font-size:clamp(2.65rem,6vw,4rem)}}
+@media(max-width:700px){.landing-hero{grid-template-columns:1fr;gap:12px;min-height:0;padding:35px 0 28px}.landing-copy{max-width:100%}.landing-eyebrow{margin-bottom:18px;font-size:.65rem}.landing-hero h1{max-width:570px;font-size:clamp(2.65rem,11.2vw,4rem)}.landing-hero .landing-copy>p{margin-top:16px;font-size:1rem;line-height:1.7}.landing-actions{gap:13px;margin-top:21px}.landing-join{width:100%;justify-content:center}.landing-secondary{padding:4px 0}.landing-trust{margin-top:19px;font-size:.73rem}.landing-visual{min-height:355px;width:min(100%,440px);margin-top:8px}.landing-photo-main{inset:3% 17% 5% 13%}.landing-photo-top{width:30%;height:33%}.landing-photo-bottom{width:33%;height:32%}.landing-note{right:0;bottom:1%;max-width:220px;padding:10px 12px}.landing-heart-float{width:51px;height:51px;right:0;font-size:1.8rem}.hero{padding-bottom:24px}}
+@media(max-width:420px){.landing-visual{min-height:310px}.landing-photo{border-width:3px;border-radius:20px}.landing-photo-main{border-radius:25px}.landing-photo-label{left:13px;bottom:14px}.landing-photo-label b{font-size:1rem}.landing-photo-label small{font-size:.75rem}.landing-note{max-width:196px}.landing-note b{font-size:.72rem}.landing-note small{font-size:.66rem}.landing-trust{gap:7px}#page-discover .person .portrait{height:320px}}
+
 </style>
 
 </head>
 <body>
 <header class="top"><div class="wrap topin"><div class="brand">♡ Love<span>Connect</span></div><nav id="nav" class="hidden"><button class="active" data-page="discover">Discover</button><button data-page="video">Video feed</button><button data-page="matches">Matches</button><button data-page="messages">Messages</button><button data-page="profile">My profile</button><button data-page="plans">Plans</button><button data-page="advertise">Advertise</button></nav><div id="accountActions"><button class="soft" id="showLogin">Log in</button> <button class="primary" id="showRegister">Join free</button></div></div></header>
 <main class="wrap">
-<section class="hero"><h1>Meet your kind of<br><span style="color:var(--pink)">connection.</span></h1></section>
+<section class="hero landing-hero" id="landingHero">
+  <div class="landing-copy">
+    <span class="landing-eyebrow"><span class="landing-live-dot"></span> YOUR NEXT CHAPTER STARTS HERE</span>
+    <h1>Meet someone who feels like <span>your kind of connection.</span></h1>
+    <p>Discover people, share your story, and build something real — one conversation at a time.</p>
+    <div class="landing-actions">
+      <button type="button" class="primary landing-join" onclick="document.getElementById('showRegister').click()">Join Love Connect <span aria-hidden="true">→</span></button>
+      <a class="landing-secondary" href="#auth">Already a member? <strong>Log in</strong></a>
+    </div>
+    <div class="landing-trust"><span>♡ Made for genuine connection</span><span>•</span><span>18+ community</span></div>
+  </div>
+  <div class="landing-visual" aria-label="A preview of the people you could meet">
+    <div class="landing-photo landing-photo-main"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=85" alt="Portrait representing a Love Connect member" fetchpriority="high"><span class="landing-photo-label"><b>Meet someone new</b><small>Start with a hello</small></span></div>
+    <div class="landing-photo landing-photo-top"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=420&q=80" alt="" loading="lazy"></div>
+    <div class="landing-photo landing-photo-bottom"><img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=420&q=80" alt="" loading="lazy"></div>
+    <div class="landing-heart-float" aria-hidden="true">♡</div>
+    <div class="landing-note"><span class="landing-note-icon">✦</span><span><b>Your people are out there</b><small>Make the first connection.</small></span></div>
+  </div>
+</section>
 <div id="message" aria-live="polite"></div>
 <section id="auth" class="panel">
 <h2 class="section-title" id="authTitle">Create your account</h2><p class="muted small">Love Connect is for adults aged 18 and over.</p>
