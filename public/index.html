@@ -866,6 +866,14 @@ body #chat:not(.hidden) .chat-safety-actions,body #chat:not(.hidden) #chatSafety
   #page-messages:not(.chat-room-open) .message-inbox-row{min-height:72px!important;padding:10px 14px!important}
 }
 
+/* Mature voice-note control and clear recording states */
+#page-messages .voice-note-button{width:46px!important;height:46px!important;min-width:46px!important;flex:0 0 46px!important;padding:0!important;border:1px solid #d6e2f0!important;border-radius:15px!important;display:grid!important;place-items:center!important;background:#eef3fb!important;color:#31517d!important;box-shadow:0 2px 6px rgba(24,42,74,.08)!important;font-size:0!important;line-height:1!important;outline-offset:3px}
+#page-messages .voice-note-button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#page-messages .voice-note-button:focus-visible{outline:3px solid #8aa8ff!important}
+#page-messages .voice-note-button.recording{background:#fff0f1!important;color:#c12d4a!important;border-color:#f2b8c2!important;box-shadow:0 0 0 4px rgba(220,53,82,.10)!important}
+#page-messages .voice-note-button:disabled{opacity:.58;cursor:wait}
+#page-messages .voice-note-status{font-size:.82rem;line-height:1.45;color:#66758b}
+@media(max-width:700px){#page-messages .voice-note-button{width:44px!important;height:44px!important;min-width:44px!important;flex-basis:44px!important;border-radius:14px!important}}
 </style>
 
 </head>
@@ -1340,12 +1348,3 @@ if($("addStoryButton"))$("addStoryButton").onclick=()=>{
 loadStories();
 authMode(true);checkSession();
 </script></body></html>
-
-/* Mature voice-note control and clear recording states */
-#page-messages .voice-note-button{width:46px!important;height:46px!important;min-width:46px!important;flex:0 0 46px!important;padding:0!important;border:1px solid #d6e2f0!important;border-radius:15px!important;display:grid!important;place-items:center!important;background:#eef3fb!important;color:#31517d!important;box-shadow:0 2px 6px rgba(24,42,74,.08)!important;font-size:0!important;line-height:1!important;outline-offset:3px}
-#page-messages .voice-note-button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-#page-messages .voice-note-button:focus-visible{outline:3px solid #8aa8ff!important}
-#page-messages .voice-note-button.recording{background:#fff0f1!important;color:#c12d4a!important;border-color:#f2b8c2!important;box-shadow:0 0 0 4px rgba(220,53,82,.10)!important}
-#page-messages .voice-note-button:disabled{opacity:.58;cursor:wait}
-#page-messages .voice-note-status{font-size:.82rem;line-height:1.45;color:#66758b}
-@media(max-width:700px){#page-messages .voice-note-button{width:44px!important;height:44px!important;min-width:44px!important;flex-basis:44px!important;border-radius:14px!important}}
