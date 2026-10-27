@@ -63,7 +63,7 @@ const COUNTRY_ALIASES = {
   "north korea": "korea, democratic people's republic of"
 };
 function normalizeCountry(value) {
-  const normalized = String(value || "").trim().toLowerCase().replace(/[.]/g, "").replace(/\\s+/g, " ");
+  const normalized = String(value || "").trim().toLowerCase().replace(/[.]/g, "").replace(/\s+/g, " ");
   return COUNTRY_ALIASES[normalized] || normalized;
 }
 async function verifyCountryFromConnection(req, selectedCountry) {
@@ -71,7 +71,7 @@ async function verifyCountryFromConnection(req, selectedCountry) {
   if (!chosen) return { ok: false, status: 400, error: "Choose your actual country to continue." };
   if (!isProduction) return { ok: true };
   const ip = String(req.ip || "").replace(/^::ffff:/, "").trim();
-  if (!ip || ip === "::1" || ip === "127.0.0.1" || /^(10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.)/.test(ip)) {
+  if (!ip || ip === "::1" || ip === "127.0.0.1" || /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(ip)) {
     return { ok: false, status: 503, error: "We could not verify your connection country. Turn off VPN/proxy and try again." };
   }
   try {
