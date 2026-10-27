@@ -171,7 +171,7 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS messages (
       id BIGSERIAL PRIMARY KEY, sender_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
       recipient_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-      body TEXT NOT NULL CHECK (char_length(body) <= 2000),
+      body TEXT NOT NULL CHECK (char_length(body) <= 380000),
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
     CREATE INDEX IF NOT EXISTS messages_pair_idx ON messages(sender_id, recipient_id, created_at);
@@ -204,6 +204,8 @@ async function initDb() {
     );
     CREATE INDEX IF NOT EXISTS sponsor_campaigns_member_idx ON sponsor_campaigns(member_id,created_at DESC);
   `);
+  await pool.query("ALTER TABLE messages DROP CONSTRAINT IF EXISTS messages_body_check");
+  await pool.query("ALTER TABLE messages ADD CONSTRAINT messages_body_check CHECK (char_length(body) <= 380000)");
   await pool.query("CREATE TABLE IF NOT EXISTS follows (follower_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE, followed_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (follower_id, followed_id), CHECK (follower_id <> followed_id))");
   await pool.query("CREATE INDEX IF NOT EXISTS follows_followed_idx ON follows(followed_id, created_at DESC)");
   await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS photo_data BYTEA, ADD COLUMN IF NOT EXISTS photo_type TEXT");
