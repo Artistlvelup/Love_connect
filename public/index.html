@@ -583,7 +583,7 @@ body:has(#app:not(.hidden)) .landing-hero{display:none!important}
     <p>Discover people, share your story, and build something real — one conversation at a time.</p>
     <div class="landing-actions">
       <button type="button" class="primary landing-join" onclick="document.getElementById('showRegister').click()">Join Love Connect <span aria-hidden="true">→</span></button>
-      <a class="landing-secondary" href="#auth">Already a member? <strong>Log in</strong></a>
+      <a class="landing-secondary" href="#auth" onclick="event.preventDefault();document.getElementById('showLogin').click()">Already a member? <strong>Log in</strong></a>
     </div>
     <div class="landing-trust"><span>♡ Made for genuine connection</span><span>•</span><span>18+ community</span></div>
   </div>
