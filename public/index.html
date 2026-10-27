@@ -427,7 +427,7 @@ button.soft{background:#454064!important;color:#f1eaff!important}
 .landing-hero h1 span{display:block;margin-top:8px;background:linear-gradient(100deg,#ff8cb2 0%,#c7a7ff 58%,#7ce5d6 100%);background-clip:text;-webkit-background-clip:text;color:transparent}
 .landing-hero .landing-copy>p{max-width:490px;margin:22px 0 0;color:#d9e0f7;font-size:1.06rem;line-height:1.8}
 .landing-actions{display:flex;align-items:center;flex-wrap:wrap;gap:18px;margin-top:28px}
-.landing-join{display:inline-flex;align-items:center;justify-content:center;gap:18px;min-height:54px;padding:15px 21px!important;border-radius:15px!important;font-size:1rem;box-shadow:0 12px 30px #ff668f38!important}
+.landing-join{display:inline-flex;align-items:center;justify-content:center;gap:20px;min-height:66px;padding:19px 30px!important;border-radius:17px!important;font-size:1.1rem;font-weight:850;letter-spacing:.01em;box-shadow:0 14px 34px #ff668f45!important;border:1px solid #ffffff35}
 .landing-join span{font-size:1.25rem;line-height:1}
 .landing-secondary{color:#e4e7fb;text-decoration:none;font-size:.92rem}
 .landing-secondary strong{color:#ff9cbd;text-decoration:underline;text-underline-offset:4px}
@@ -488,7 +488,7 @@ body:has(#app:not(.hidden)) .landing-hero{display:none!important}
 
 
 /* Swipe-first discovery: one member card, no endless vertical feed */
-.landing-hero{display:grid!important;visibility:visible!important;opacity:1!important}
+.landing-hero:not(.hidden){display:grid!important;visibility:visible!important;opacity:1!important}.landing-hero.hidden{display:none!important;visibility:hidden!important;opacity:0!important}
 .landing-hero h1{display:block!important;visibility:visible!important;opacity:1!important;color:#fff!important;position:relative;z-index:3}
 .landing-hero h1 span{display:block!important;color:#ff8fb5!important;background:none!important;-webkit-text-fill-color:#ff8fb5!important}
 #page-discover #feed{display:flex;justify-content:center;align-items:flex-start;width:100%;min-height:420px;margin:18px auto 8px;overflow:hidden}
