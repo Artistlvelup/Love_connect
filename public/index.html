@@ -818,6 +818,54 @@ body #chat:not(.hidden) .chat-safety-actions,body #chat:not(.hidden) #chatSafety
 @media(min-width:760px){#page-messages.chat-room-open{left:50%!important;right:auto!important;width:min(760px,100vw)!important;transform:translateX(-50%)!important;box-shadow:0 0 0 100vmax #0009!important}}
 @media(max-width:420px){#page-messages.chat-room-open #chat .chat-room-toolbar{gap:6px!important;padding:7px 8px!important}#page-messages.chat-room-open #chat .lc-chat-bubble{max-width:90%!important;font-size:.94rem!important}#page-messages.chat-room-open #chat #chatForm{gap:4px!important;padding-left:6px!important;padding-right:6px!important}}
 
+
+/* Love Connect inbox polish: keep the inbox clean and light; retain the existing full-screen chat room. */
+#page-messages:not(.chat-room-open) .messages-panel{
+  background:#fff!important;color:#202124!important;border:1px solid #e8edf0!important;
+  box-shadow:none!important;border-radius:0!important;padding:16px 0!important;
+}
+#page-messages:not(.chat-room-open) .messages-panel .section-title{
+  color:#111b21!important;margin:0!important;padding:4px 18px 14px!important;font-size:1.35rem!important;
+}
+#page-messages:not(.chat-room-open) #messagesAccessNotice{display:none!important}
+#page-messages:not(.chat-room-open) #messagesPlansWrap:empty{display:none!important}
+#page-messages:not(.chat-room-open) #messagesList.chatlist{
+  display:flex!important;flex-direction:column!important;gap:0!important;margin:0!important;padding:0!important;
+  background:#fff!important;border:0!important;border-radius:0!important;
+}
+#page-messages:not(.chat-room-open) .message-inbox-row{
+  display:flex!important;align-items:center!important;gap:13px!important;width:100%!important;min-height:76px!important;
+  padding:12px 16px!important;margin:0!important;border:0!important;border-bottom:1px solid #edf0f2!important;
+  border-radius:0!important;background:#fff!important;color:#111b21!important;text-align:left!important;
+  box-shadow:none!important;cursor:pointer!important;
+}
+#page-messages:not(.chat-room-open) .message-inbox-row:active{background:#f3f6f7!important}
+#page-messages:not(.chat-room-open) .message-inbox-avatar{
+  display:flex!important;align-items:center!important;justify-content:center!important;flex:0 0 50px!important;
+  width:50px!important;height:50px!important;overflow:hidden!important;border-radius:50%!important;
+  background:#dcebe7!important;color:#176b5b!important;font-size:1.2rem!important;font-weight:700!important;
+}
+#page-messages:not(.chat-room-open) .message-inbox-avatar img{
+  display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;border-radius:50%!important;
+}
+#page-messages:not(.chat-room-open) .message-inbox-copy{
+  display:flex!important;flex:1 1 auto!important;min-width:0!important;flex-direction:column!important;gap:5px!important;
+}
+#page-messages:not(.chat-room-open) .message-inbox-copy strong{
+  color:#111b21!important;font-size:1rem!important;font-weight:600!important;line-height:1.25!important;
+}
+#page-messages:not(.chat-room-open) .message-inbox-preview{
+  display:block!important;overflow:hidden!important;color:#667781!important;font-size:.88rem!important;
+  line-height:1.3!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+}
+#page-messages:not(.chat-room-open) .message-inbox-chevron{
+  flex:0 0 auto!important;color:#8696a0!important;font-size:1.45rem!important;padding-left:4px!important;
+}
+@media(max-width:480px){
+  #page-messages:not(.chat-room-open) .messages-panel{padding-top:10px!important}
+  #page-messages:not(.chat-room-open) .message-inbox-row{min-height:72px!important;padding:10px 14px!important}
+}
+
 </style>
 
 </head>
