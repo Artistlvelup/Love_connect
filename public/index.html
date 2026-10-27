@@ -698,6 +698,48 @@ body:has(#app:not(.hidden)) .landing-hero{display:none!important}
 #page-matches .gold-outline-button{background:#171717!important;border:1px solid #9b7c31!important;color:#f3d879!important}
 #page-matches .likes-section .empty{grid-column:1/-1;border:1px dashed #65552c!important;background:#1b1a15!important;color:#c6bda8!important;border-radius:15px;padding:22px}
 @media(max-width:520px){#page-matches .likes-page-heading{padding:21px 17px}#page-matches .likes-grid{grid-template-columns:1fr}#page-matches .match-person-card{flex-wrap:wrap}#page-matches .likes-card-actions{width:100%;padding-left:79px}#page-matches .likes-card-actions button{flex:1}}
+
+/* Professional light Messages experience */
+#page-messages{--msg-ink:#172b4d;--msg-muted:#66758b;--msg-line:#e4ebf3;--msg-blue:#2563eb;--msg-teal:#0f9f9a;color:var(--msg-ink)}
+#page-messages .messages-panel{background:#f5f8fc!important;border:1px solid #e7edf5!important;border-radius:24px!important;padding:clamp(16px,3vw,30px)!important;box-shadow:0 14px 38px rgba(28,52,88,.08)!important;min-height:65vh}
+#page-messages #messagesInbox{max-width:820px;margin:0 auto}
+#page-messages .section-title{font-size:clamp(1.65rem,4vw,2.2rem);font-weight:850;letter-spacing:-.045em;color:#172b4d;margin:0 0 8px}
+#page-messages #messagesAccessNotice{margin:0 0 14px;color:#66758b!important;line-height:1.65}
+#page-messages #messagesPlansWrap{margin:12px 0 20px}
+#page-messages #messagesPlansButton{background:#2563eb!important;color:#fff!important;border-radius:12px!important;box-shadow:0 6px 16px #2563eb26!important}
+#page-messages #messagesStatus{color:#52637a}
+#page-messages #messagesList{background:#fff!important;border:1px solid #e4ebf3!important;border-radius:18px!important;padding:6px 16px!important;color:#66758b;box-shadow:0 6px 20px rgba(23,43,77,.04)!important}
+#page-messages .message-inbox-row{padding:16px 5px!important;gap:14px!important;border-bottom:1px solid #edf1f6!important;background:#fff!important;color:#172b4d!important;transition:background .18s ease,transform .18s ease}
+#page-messages .message-inbox-row:first-child{border-radius:12px 12px 0 0}
+#page-messages .message-inbox-row:last-child{border-bottom:0!important}
+#page-messages .message-inbox-row:hover{background:#f4f8ff!important;transform:translateX(2px)}
+#page-messages .message-inbox-avatar,#page-messages .chat-header-avatar{background:linear-gradient(135deg,#dbeafe,#ccfbf1)!important;color:#1d4ed8!important;border:2px solid #fff;box-shadow:0 2px 8px rgba(37,99,235,.12)}
+#page-messages .message-inbox-copy strong{font-size:1rem;font-weight:800;color:#172b4d}
+#page-messages .message-inbox-preview{color:#718096!important;font-size:.9rem}
+#page-messages .message-inbox-chevron{color:#9aa9bc!important}
+#page-messages #chat{max-width:820px;margin:0 auto;background:#fff;border:1px solid #e4ebf3;border-radius:20px;padding:clamp(14px,3vw,24px);box-shadow:0 8px 28px rgba(23,43,77,.06)}
+#page-messages .chat-room-toolbar{padding:0 0 16px!important;border-bottom:1px solid #e8eef5!important}
+#page-messages .chat-room-person h3{color:#172b4d;font-size:1.05rem;font-weight:800}
+#page-messages .chat-back-button{background:#edf4ff!important;color:#2458a6!important;border-radius:12px!important}
+#page-messages .chat-video-call-button{background:linear-gradient(135deg,#0f9f9a,#0d9488)!important;color:#fff!important;box-shadow:0 5px 14px #0f9f9a2b!important}
+#page-messages .chat-history{background:#f4f7fb!important;border:1px solid #e7edf5!important;border-radius:16px!important;padding:14px!important;color:#172b4d!important}
+#page-messages .chat-history p{background:#fff!important;color:#25364d!important;border:1px solid #e5ebf3!important;border-radius:16px 16px 16px 5px!important;padding:11px 14px!important;box-shadow:0 2px 6px rgba(23,43,77,.035)}
+#page-messages .chat-compose textarea{background:#fff!important;color:#172b4d!important;border:1px solid #d9e3ef!important;border-radius:16px!important;box-shadow:inset 0 1px 2px rgba(23,43,77,.025)}
+#page-messages .chat-compose textarea:focus{outline:3px solid #2563eb1c;border-color:#7aa7f8}
+#page-messages .chat-compose button.primary{background:#2563eb!important;color:#fff!important;box-shadow:0 5px 14px #2563eb26!important}
+#page-messages .voice-note-button{background:#e9f7f5!important;color:#087f79!important}
+#page-messages .chat-safety-actions .soft{background:#edf4ff!important;color:#2458a6!important}
+#page-messages .chat-safety-actions .danger{background:#fff1f2!important;color:#be123c!important}
+#page-messages .call-statusline,#page-messages .call-quality-note,#page-messages #chatSafetyStatus{color:#66758b}
+@media(max-width:700px){
+ #page-messages .messages-panel{margin:8px 0 18px!important;padding:16px 13px!important;border-radius:20px!important}
+ #page-messages #messagesList{padding:4px 11px!important;border-radius:16px!important}
+ #page-messages .message-inbox-row{padding:14px 2px!important;gap:11px!important}
+ #page-messages .message-inbox-avatar{width:48px;height:48px;flex-basis:48px}
+ #page-messages #chat{padding:13px!important;border-radius:17px!important}
+ #page-messages .chat-history{max-height:43vh;margin:12px 0!important}
+}
+
 </style>
 
 </head>
