@@ -1135,7 +1135,41 @@ $("chatForm").onsubmit=async e=>{e.preventDefault();if(!chatMember)return;const 
 const chatEmojiButton=$("chatEmojiButton");if(chatEmojiButton)chatEmojiButton.onclick=()=>{const input=$("chatText");if(!input)return;const start=input.selectionStart??input.value.length,end=input.selectionEnd??input.value.length;input.value=input.value.slice(0,start)+"😊"+input.value.slice(end);input.focus();input.setSelectionRange(start+2,start+2);input.dispatchEvent(new Event("input",{bubbles:true}));};
 const chatMoreButton=$("chatMoreButton");if(chatMoreButton)chatMoreButton.onclick=()=>{const actions=$("chatSafetyActions");if(actions){actions.classList.toggle("chat-options-open");chatMoreButton.setAttribute("aria-expanded",String(actions.classList.contains("chat-options-open")));}};
 
-let voiceRecorder=null,voiceChunks=[],voiceStream=null,voiceTimer=null;const voiceButton=$("voiceNoteButton");if(voiceButton)voiceButton.onclick=async()=>{if(!chatMember)return;if(voiceRecorder&&voiceRecorder.state==="recording"){voiceRecorder.stop();return}if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){$("voiceNoteStatus").textContent="Voice recording is not supported by this browser.";return}try{voiceStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});const mimeType=["audio/webm;codecs=opus","audio/webm","audio/mp4"].find(t=>MediaRecorder.isTypeSupported(t));voiceRecorder=new MediaRecorder(voiceStream,mimeType?{mimeType}:undefined);voiceChunks=[];voiceRecorder.ondataavailable=e=>{if(e.data&&e.data.size)voiceChunks.push(e.data)};voiceRecorder.onstop=async()=>{clearTimeout(voiceTimer);voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;voiceButton.classList.remove("recording");voiceButton.textContent="🎙️";voiceButton.title="Record voice note";const blob=new Blob(voiceChunks,{type:voiceRecorder.mimeType||"audio/webm"});if(blob.size>120000){$("voiceNoteStatus").textContent="Voice note is too large. Please record a shorter note (about 10 seconds).";return}if(!blob.size){$("voiceNoteStatus").textContent="No audio recorded. Please try again.";return}const reader=new FileReader();reader.onload=async()=>{try{const data=String(reader.result).split(",")[1];const body="LCVOICE1|"+(blob.type||"audio/webm")+"|"+data;await api("/api/messages/"+chatMember.id,{method:"POST",body:JSON.stringify({body})});$("voiceNoteStatus").textContent="Voice note sent.";await loadChat()}catch(err){$("voiceNoteStatus").textContent=err.message||"Could not send voice note."}};reader.readAsDataURL(blob)};voiceRecorder.start();voiceButton.classList.add("recording");voiceButton.textContent="■";voiceButton.title="Stop and send voice note";$("voiceNoteStatus").textContent="Recording… tap ■ to send";voiceTimer=setTimeout(()=>{if(voiceRecorder?.state==="recording")voiceRecorder.stop()},12000)}catch(err){$("voiceNoteStatus").textContent="Please allow microphone access to record a voice note.";}};
+let voiceRecorder=null,voiceChunks=[],voiceStream=null,voiceTimer=null,voiceSending=false;
+const voiceButton=$("voiceNoteButton");
+const voiceMicIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"></path></svg>';
+const voiceStopIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>';
+function setVoiceButton(recording=false,disabled=false){if(!voiceButton)return;voiceButton.classList.toggle("recording",recording);voiceButton.disabled=disabled;voiceButton.innerHTML=recording?voiceStopIcon:voiceMicIcon;voiceButton.setAttribute("aria-label",recording?"Stop recording and send voice note":"Record voice note");voiceButton.title=recording?"Tap to stop and send":"Record voice note";}
+if(voiceButton)voiceButton.onclick=async()=>{
+ const status=$("voiceNoteStatus");
+ if(voiceSending)return;
+ if(voiceRecorder&&voiceRecorder.state==="recording"){voiceButton.disabled=true;status.textContent="Finishing recording…";try{voiceRecorder.stop()}catch(err){setVoiceButton(false);status.textContent="Could not stop recording. Please try again."}return}
+ if(!chatMember){status.textContent="Open a conversation before recording a voice note.";return}
+ if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){status.textContent="Voice recording needs a supported browser and microphone permission.";return}
+ setVoiceButton(false,true);status.textContent="Requesting microphone access…";
+ try{
+  voiceStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+  const mimeType=["audio/webm;codecs=opus","audio/webm","audio/mp4"].find(t=>MediaRecorder.isTypeSupported(t));
+  voiceRecorder=new MediaRecorder(voiceStream,mimeType?{mimeType}:undefined);voiceChunks=[];
+  voiceRecorder.ondataavailable=e=>{if(e.data&&e.data.size)voiceChunks.push(e.data)};
+  voiceRecorder.onerror=()=>{clearTimeout(voiceTimer);voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;voiceSending=false;setVoiceButton(false);status.textContent="Recording failed. Please check microphone permission and try again."};
+  voiceRecorder.onstop=async()=>{
+   clearTimeout(voiceTimer);voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;setVoiceButton(false,true);voiceSending=true;status.textContent="Preparing voice note…";
+   try{
+    const recorder=voiceRecorder;const blob=new Blob(voiceChunks,{type:recorder?.mimeType||"audio/webm"});voiceChunks=[];
+    if(!blob.size)throw new Error("No audio was captured. Tap the microphone and speak, then stop.");
+    if(blob.size>120000)throw new Error("This voice note is too large to send. Please record a shorter note.");
+    const reader=new FileReader();const data=await new Promise((resolve,reject)=>{reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=()=>reject(new Error("Could not prepare the voice note."));reader.readAsDataURL(blob)});
+    const body="LCVOICE1|"+(blob.type||"audio/webm")+"|"+data;
+    await api("/api/messages/"+chatMember.id,{method:"POST",body:JSON.stringify({body})});
+    status.textContent="Voice note sent.";await loadChat();
+   }catch(err){status.textContent=err.message||"Could not send voice note."}
+   finally{voiceSending=false;setVoiceButton(false)}
+  };
+  voiceRecorder.start(250);setVoiceButton(true);status.textContent="Recording… tap the stop button to send";
+  voiceTimer=setTimeout(()=>{if(voiceRecorder?.state==="recording"){status.textContent="15-second limit reached. Sending voice note…";voiceRecorder.stop()}},15000);
+ }catch(err){voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;setVoiceButton(false);status.textContent=err.name==="NotAllowedError"?"Allow microphone access in your browser settings, then try again.":err.message||"Could not start recording. Check microphone access and try again."}
+};
 async function loadMyPhoto(){loadOwnerGallery();const img=$("myPhotoPreview"),placeholder=$("myPhotoPlaceholder"),remove=$("removePhotoButton");img.onload=()=>{img.classList.remove("hidden");placeholder.classList.add("hidden");if(remove)remove.classList.remove("hidden")};img.onerror=()=>{img.classList.add("hidden");placeholder.classList.remove("hidden");if(remove)remove.classList.add("hidden");img.removeAttribute("src")};img.src="/api/members/"+encodeURIComponent(me.id)+"/photo?fresh="+Date.now()}
 function openProfilePhotoPicker(){$("photoFile").click()}$("changePhotoButton").onclick=openProfilePhotoPicker;$("myPhotoPreview").onclick=openProfilePhotoPicker;$("myPhotoPreview").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openProfilePhotoPicker()}};$("myPhotoPlaceholder").onclick=openProfilePhotoPicker;$("photoFile").onchange=()=>{const file=$("photoFile").files[0];if(!file)return;if(!file.type.startsWith("image/")){profileStatus("Choose an image file.",true);$("photoFile").value="";return}const img=$("myPhotoPreview"),placeholder=$("myPhotoPlaceholder");if(img.dataset.previewUrl)URL.revokeObjectURL(img.dataset.previewUrl);img.dataset.previewUrl=URL.createObjectURL(file);img.src=img.dataset.previewUrl;img.classList.remove("hidden");placeholder.classList.add("hidden");profileStatus("New picture selected. Tap Save profile to upload it.")};
 $("removePhotoButton").onclick=async()=>{const remove=$("removePhotoButton"),img=$("myPhotoPreview"),placeholder=$("myPhotoPlaceholder");if(!confirm("Remove the saved profile photo from your account?"))return;remove.disabled=true;try{await api("/api/me/photo",{method:"DELETE"});img.onload=null;img.onerror=null;img.removeAttribute("src");img.classList.add("hidden");placeholder.classList.remove("hidden");remove.classList.add("hidden");$("photoFile").value="";profileStatus("Saved profile photo removed.");}catch(err){profileStatus(err.message,true)}finally{remove.disabled=false}};
@@ -1306,3 +1340,12 @@ if($("addStoryButton"))$("addStoryButton").onclick=()=>{
 loadStories();
 authMode(true);checkSession();
 </script></body></html>
+
+/* Mature voice-note control and clear recording states */
+#page-messages .voice-note-button{width:46px!important;height:46px!important;min-width:46px!important;flex:0 0 46px!important;padding:0!important;border:1px solid #d6e2f0!important;border-radius:15px!important;display:grid!important;place-items:center!important;background:#eef3fb!important;color:#31517d!important;box-shadow:0 2px 6px rgba(24,42,74,.08)!important;font-size:0!important;line-height:1!important;outline-offset:3px}
+#page-messages .voice-note-button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#page-messages .voice-note-button:focus-visible{outline:3px solid #8aa8ff!important}
+#page-messages .voice-note-button.recording{background:#fff0f1!important;color:#c12d4a!important;border-color:#f2b8c2!important;box-shadow:0 0 0 4px rgba(220,53,82,.10)!important}
+#page-messages .voice-note-button:disabled{opacity:.58;cursor:wait}
+#page-messages .voice-note-status{font-size:.82rem;line-height:1.45;color:#66758b}
+@media(max-width:700px){#page-messages .voice-note-button{width:44px!important;height:44px!important;min-width:44px!important;flex-basis:44px!important;border-radius:14px!important}}
