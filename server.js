@@ -50,7 +50,7 @@ const pool = new Pool({
 
 app.disable("x-powered-by");
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(express.json({ limit: "400kb", verify: (req, _res, buf) => { req.rawBody = Buffer.from(buf); } }));
+app.use(express.json({ limit: "2mb", verify: (req, _res, buf) => { req.rawBody = Buffer.from(buf); } }));
 app.use(express.urlencoded({ extended: false, limit: "50kb" }));
 app.set("trust proxy", 1);
 
@@ -171,7 +171,7 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS messages (
       id BIGSERIAL PRIMARY KEY, sender_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
       recipient_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-      body TEXT NOT NULL CHECK (char_length(body) <= 380000),
+      body TEXT NOT NULL CHECK (char_length(body) <= 1500000),
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
     CREATE INDEX IF NOT EXISTS messages_pair_idx ON messages(sender_id, recipient_id, created_at);
@@ -205,7 +205,7 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS sponsor_campaigns_member_idx ON sponsor_campaigns(member_id,created_at DESC);
   `);
   await pool.query("ALTER TABLE messages DROP CONSTRAINT IF EXISTS messages_body_check");
-  await pool.query("ALTER TABLE messages ADD CONSTRAINT messages_body_check CHECK (char_length(body) <= 380000)");
+  await pool.query("ALTER TABLE messages ADD CONSTRAINT messages_body_check CHECK (char_length(body) <= 1500000)");
   await pool.query("CREATE TABLE IF NOT EXISTS follows (follower_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE, followed_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (follower_id, followed_id), CHECK (follower_id <> followed_id))");
   await pool.query("CREATE INDEX IF NOT EXISTS follows_followed_idx ON follows(followed_id, created_at DESC)");
   await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS photo_data BYTEA, ADD COLUMN IF NOT EXISTS photo_type TEXT");
@@ -830,7 +830,7 @@ app.post("/api/messages/:memberId", requireAuth, requireActiveSubscription, asyn
   try {
     const me = String(req.session.memberId), other = String(req.params.memberId);
     const body = String(req.body?.body || "").trim();
-    if (!body || body.length > 380000) return res.status(400).json({ error: "Message or voice note is too large. Please send a shorter message or voice note." });
+    if (!body || body.length > 1500000) return res.status(400).json({ error: "Message or voice note is too large. Please send a shorter message or voice note." });
     const match = await pool.query("SELECT 1 FROM matches WHERE (member_a=$1 AND member_b=$2) OR (member_a=$2 AND member_b=$1)", [me,other]);
     if (!match.rowCount) return res.status(403).json({ error: "Private messaging is available only between matches." });
     const blocked = await pool.query("SELECT 1 FROM member_blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1)", [me,other]);
