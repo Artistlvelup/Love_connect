@@ -148,6 +148,8 @@ async function initDb() {
     );
     CREATE INDEX IF NOT EXISTS sponsor_campaigns_member_idx ON sponsor_campaigns(member_id,created_at DESC);
   `);
+  await pool.query("CREATE TABLE IF NOT EXISTS follows (follower_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE, followed_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (follower_id, followed_id), CHECK (follower_id <> followed_id))");
+  await pool.query("CREATE INDEX IF NOT EXISTS follows_followed_idx ON follows(followed_id, created_at DESC)");
   await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS photo_data BYTEA, ADD COLUMN IF NOT EXISTS photo_type TEXT");
   await pool.query("ALTER TABLE members ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION, ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION");
   await pool.query("CREATE TABLE IF NOT EXISTS stories (id BIGSERIAL PRIMARY KEY, member_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE, image_data BYTEA NOT NULL, image_type TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()); CREATE INDEX IF NOT EXISTS stories_recent_idx ON stories(created_at DESC)");
@@ -602,7 +604,8 @@ app.get("/api/discover", requireAuth, async (req, res, next) => {
                     cos(radians(viewer.latitude))*cos(radians(m.latitude))*cos(radians(m.longitude-viewer.longitude))
                   ))))::numeric, 1)
                   ELSE NULL END AS distance_km,
-             EXISTS (SELECT 1 FROM likes l WHERE l.from_member=$1 AND l.to_member=m.id) AS liked
+             EXISTS (SELECT 1 FROM likes l WHERE l.from_member=$1 AND l.to_member=m.id) AS liked,
+             EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.followed_id=m.id) AS followed
       FROM members m
       CROSS JOIN (SELECT latitude,longitude FROM members WHERE id=$1) viewer
       WHERE m.id <> $1
@@ -615,7 +618,7 @@ app.get("/api/discover", requireAuth, async (req, res, next) => {
       const v = await pool.query("SELECT DISTINCT ON(member_id) member_id,id,duration_seconds FROM videos WHERE member_id = ANY($1::bigint[]) ORDER BY member_id,created_at DESC", [ids]);
       videoRows = v.rows;
     }
-    res.json({ members: r.rows.map(m => ({ ...publicMember(m), distanceKm: m.distance_km == null ? null : Number(m.distance_km), liked: Boolean(m.liked), hasVideo: videoRows.some(v => String(v.member_id) === String(m.id)), videoId: (videoRows.find(v => String(v.member_id) === String(m.id)) || {}).id || null })) });
+    res.json({ members: r.rows.map(m => ({ ...publicMember(m), distanceKm: m.distance_km == null ? null : Number(m.distance_km), liked: Boolean(m.liked), followed: Boolean(m.followed), hasVideo: videoRows.some(v => String(v.member_id) === String(m.id)), videoId: (videoRows.find(v => String(v.member_id) === String(m.id)) || {}).id || null })) });
   } catch (err) { next(err); }
 });
 
@@ -656,6 +659,28 @@ app.post("/api/likes/:memberId", requireAuth, async (req, res, next) => {
     res.json({ liked: true, matched });
   } catch (err) { await client.query("ROLLBACK").catch(()=>{}); next(err); }
   finally { client.release(); }
+});
+
+app.post("/api/members/:memberId/follow", requireAuth, async (req, res, next) => {
+  try {
+    const me = String(req.session.memberId), target = String(req.params.memberId);
+    if (me === target) return res.status(400).json({ error: "You cannot follow yourself." });
+    const exists = await pool.query("SELECT id FROM members WHERE id=$1", [target]);
+    if (!exists.rowCount) return res.status(404).json({ error: "Member not found." });
+    const blocked = await pool.query("SELECT 1 FROM member_blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1)", [me,target]);
+    if (blocked.rowCount) return res.status(403).json({ error: "This interaction is unavailable." });
+    const current = await pool.query("SELECT 1 FROM follows WHERE follower_id=$1 AND followed_id=$2", [me,target]);
+    let following;
+    if (current.rowCount) {
+      await pool.query("DELETE FROM follows WHERE follower_id=$1 AND followed_id=$2", [me,target]);
+      following = false;
+    } else {
+      await pool.query("INSERT INTO follows(follower_id,followed_id) VALUES($1,$2) ON CONFLICT DO NOTHING", [me,target]);
+      following = true;
+    }
+    const count = await pool.query("SELECT COUNT(*)::int AS total FROM follows WHERE followed_id=$1", [target]);
+    res.json({ following, followersCount: Number(count.rows[0]?.total || 0) });
+  } catch (err) { next(err); }
 });
 
 app.get("/api/matches", requireAuth, async (req, res, next) => {
@@ -803,7 +828,8 @@ app.get("/api/stories/:id/image", requireAuth, async (req, res, next) => {
 app.get("/api/video-feed", requireAuth, async (req, res, next) => {
   try {
     const r = await pool.query(`
-      SELECT v.id,v.member_id,v.duration_seconds,v.created_at,m.display_name,m.country,m.bio
+      SELECT v.id,v.member_id,v.duration_seconds,v.created_at,v.storage_key,m.display_name,m.country,m.bio,
+             EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.followed_id=m.id) AS followed
       FROM videos v JOIN members m ON m.id=v.member_id
       WHERE NOT EXISTS (
         SELECT 1 FROM member_blocks b
@@ -812,11 +838,16 @@ app.get("/api/video-feed", requireAuth, async (req, res, next) => {
       )
       ORDER BY v.created_at DESC LIMIT 50
     `, [req.session.memberId]);
-    res.json({ videos: r.rows.map(v => ({
+    const videos = await Promise.all(r.rows.map(async v => ({
       id: v.id, memberId: v.member_id, displayName: v.display_name,
       country: v.country, bio: v.bio, durationSeconds: Number(v.duration_seconds),
-      createdAt: v.created_at, videoUrl: "/api/videos/" + v.id
-    })) });
+      createdAt: v.created_at, followed: Boolean(v.followed),
+      videoUrl: v.storage_key && r2Configured()
+        ? await getSignedUrl(r2Client, new GetObjectCommand({ Bucket: r2Bucket, Key: v.storage_key, ResponseContentDisposition: "inline" }), { expiresIn: 3600 })
+        : "/api/videos/" + v.id
+    })));
+    res.set("Cache-Control", "private, no-store, max-age=0");
+    res.json({ videos });
   } catch (err) { next(err); }
 });
 
@@ -846,7 +877,9 @@ app.get("/api/videos/:id", requireAuth, async (req, res, next) => {
       }), { expiresIn: 3600 });
       return res.redirect(302, url);
     }
-    res.sendFile(path.join(uploadDir, path.basename(r.rows[0].filename)));
+    res.set("Accept-Ranges", "bytes");
+    res.set("Cache-Control", "private, max-age=3600");
+    res.sendFile(path.join(uploadDir, path.basename(r.rows[0].filename)), { acceptRanges: true, maxAge: "1h" });
   } catch (err) { next(err); }
 });
 
