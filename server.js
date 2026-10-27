@@ -611,7 +611,11 @@ app.post("/api/auth/login", async (req, res, next) => {
       return res.status(401).json({ error: "Email or password is incorrect." });
     }
     const countryCheck = await verifyCountryFromConnection(req, result.rows[0].country);
-    if (!countryCheck.ok) return res.status(countryCheck.status).json({ error: countryCheck.error });
+    // A confirmed country mismatch remains blocked. If IP-country lookup is
+    // unavailable (503), do not lock an existing member out of login.
+    if (!countryCheck.ok && countryCheck.status !== 503) {
+      return res.status(countryCheck.status).json({ error: countryCheck.error });
+    }
     req.session.regenerate(err => {
       if (err) return next(err);
       req.session.memberId = result.rows[0].id;
