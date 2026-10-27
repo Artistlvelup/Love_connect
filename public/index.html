@@ -1481,6 +1481,7 @@ async function preparePeer(member,callId){
   $("endCall").disabled=false;$("micToggle").disabled=false;$("cameraToggle").disabled=false;$("switchCamera").disabled=false;$("callStatus").textContent="Connecting to "+member.displayName+"…";$("callOverlayStatus").textContent="Connecting…";
 }
 async function startCall(member){
+  await checkSubscription();
   if(!subscriptionActive&&!launchFreeAccess){showPage("plans");return}
   if(!member)return;
   try{if(!navigator.mediaDevices?.getUserMedia)throw new Error("Use a secure HTTPS website and allow camera/microphone access.");const id=crypto.randomUUID();await preparePeer(member,id);const offer=await pc.createOffer();await pc.setLocalDescription(offer);await sendSignal("offer",offer);showPage("messages");$("callStatus").textContent="Calling "+member.displayName+"… waiting for them to answer."}
