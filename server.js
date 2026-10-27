@@ -57,6 +57,7 @@ app.set("trust proxy", 1);
 // Verify the selected profile country against the country reported for the
 // request IP. This is a practical anti-misrepresentation check, not proof of
 // nationality; VPNs/proxies can make IP-based country detection inaccurate.
+const countryVerificationCache = new Map();
 const COUNTRY_ALIASES = {
   "us": "united states", "usa": "united states", "uk": "united kingdom",
   "uae": "united arab emirates", "south korea": "korea, republic of",
@@ -70,6 +71,13 @@ async function verifyCountryFromConnection(req, selectedCountry) {
   const chosen = String(selectedCountry || "").trim();
   if (!chosen) return { ok: false, status: 400, error: "Choose your actual country to continue." };
   const ip = String(req.ip || "").replace(/^::ffff:/, "").trim();
+  const cacheKey = ip + "|" + normalizeCountry(chosen);
+  const cached = countryVerificationCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.result;
+  if (countryVerificationCache.size > 2000) {
+    for (const [key, value] of countryVerificationCache) if (value.expiresAt <= Date.now()) countryVerificationCache.delete(key);
+    if (countryVerificationCache.size > 2000) countryVerificationCache.clear();
+  }
   if (!ip || ip === "::1" || ip === "127.0.0.1" || /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(ip)) {
     if (!isProduction) return { ok: true };
     return { ok: false, status: 503, error: "We could not verify your connection country. Turn off VPN/proxy and try again." };
@@ -86,13 +94,17 @@ async function verifyCountryFromConnection(req, selectedCountry) {
     const actual = normalizeCountry(data.country);
     const code = String(data.country_code).trim().toLowerCase();
     if (selected !== actual && selected !== code) {
-      return {
+      const result = {
         ok: false,
         status: 403,
         error: "Country verification failed. Your connection appears to be from " + data.country + ", but you selected " + chosen + ". Select " + data.country + " or connect from that country without a VPN/proxy."
       };
+      countryVerificationCache.set(cacheKey, { result, expiresAt: Date.now() + 5 * 60 * 1000 });
+      return result;
     }
-    return { ok: true };
+    const result = { ok: true };
+    countryVerificationCache.set(cacheKey, { result, expiresAt: Date.now() + 5 * 60 * 1000 });
+    return result;
   } catch (_error) {
     return { ok: false, status: 503, error: "Country verification is temporarily unavailable. Please try again shortly." };
   }
@@ -202,9 +214,15 @@ async function initDb() {
   await pool.query("ALTER TABLE sponsor_campaigns ADD COLUMN IF NOT EXISTS impressions BIGINT NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS clicks BIGINT NOT NULL DEFAULT 0");
 }
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   if (!req.session.memberId) return res.status(401).json({ error: "Please log in first." });
-  next();
+  try {
+    const member = await pool.query("SELECT country FROM members WHERE id=$1", [req.session.memberId]);
+    if (!member.rowCount) return res.status(401).json({ error: "Account not found. Please log in again." });
+    const countryCheck = await verifyCountryFromConnection(req, member.rows[0].country);
+    if (!countryCheck.ok) return res.status(countryCheck.status).json({ error: countryCheck.error });
+    next();
+  } catch (err) { next(err); }
 }
 const LAUNCH_FREE_MEMBER_LIMIT = 2000;
 function launchFreeAccessEnabled() {
