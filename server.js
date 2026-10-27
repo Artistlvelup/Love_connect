@@ -220,7 +220,11 @@ async function requireAuth(req, res, next) {
     const member = await pool.query("SELECT country FROM members WHERE id=$1", [req.session.memberId]);
     if (!member.rowCount) return res.status(401).json({ error: "Account not found. Please log in again." });
     const countryCheck = await verifyCountryFromConnection(req, member.rows[0].country);
-    if (!countryCheck.ok) return res.status(countryCheck.status).json({ error: countryCheck.error });
+    // Keep blocking confirmed country mismatches, but don't lock out an
+    // authenticated member solely because IP-country lookup is unavailable.
+    if (!countryCheck.ok && countryCheck.status !== 503) {
+      return res.status(countryCheck.status).json({ error: countryCheck.error });
+    }
     next();
   } catch (err) { next(err); }
 }
