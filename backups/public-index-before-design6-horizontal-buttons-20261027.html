@@ -1058,6 +1058,86 @@ body #chat:not(.hidden) .voice-note-button.recording{
   background:#c92854!important;color:#fff!important;border:0!important;
 }
 
+
+/* Design 6 final refinement: white Instagram-style cards and compact horizontal actions */
+#page-matches .likes-page-heading{
+  background:linear-gradient(120deg,#ffffff 0%,#f8f7ff 58%,#f0fbff 100%)!important;
+  border:1px solid #e1e5f2!important;
+  box-shadow:0 8px 24px rgba(30,45,80,.08)!important;
+}
+#page-matches .likes-page-heading .likes-kicker{color:#6b5bd2!important}
+#page-matches .likes-page-heading h1{color:#20243a!important}
+#page-matches .likes-page-heading p{color:#687086!important}
+#page-matches .likes-section{color:#20243a!important}
+#page-matches .likes-section-heading,
+#page-matches .likes-section-heading h2{color:#20243a!important}
+#page-matches .likes-person-card{
+  background:#fff!important;
+  color:#20243a!important;
+  border:1px solid #e3e7f0!important;
+  box-shadow:0 4px 14px rgba(30,45,80,.07)!important;
+}
+#page-matches .likes-person-card h3,
+#page-matches .likes-person-card p,
+#page-matches .likes-person-card .likes-country{color:#20243a!important}
+#page-matches .likes-person-card .likes-country{color:#788196!important}
+#page-matches .likes-status{background:#f1edff!important;color:#5c45b8!important}
+#page-matches .match-status{color:#16856b!important}
+#page-matches .likes-card-actions{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:stretch!important;
+  justify-content:space-between!important;
+  gap:5px!important;
+  width:100%!important;
+  padding-left:0!important;
+}
+#page-matches .likes-card-actions button{
+  display:flex!important;
+  flex:1 1 0!important;
+  width:auto!important;
+  min-width:0!important;
+  min-height:31px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:6px 3px!important;
+  border:0!important;
+  border-radius:8px!important;
+  font-size:clamp(9px,2.6vw,11px)!important;
+  font-weight:800!important;
+  line-height:1.1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  box-shadow:none!important;
+}
+#page-matches .likes-card-actions [data-call]{
+  background:#e4f7f2!important;
+  color:#087c68!important;
+  border:1px solid #bce9dd!important;
+}
+#page-matches .likes-card-actions [data-match]{
+  background:#e9edff!important;
+  color:#3e55b8!important;
+  border:1px solid #cfd7ff!important;
+}
+#page-matches .likes-card-actions button+button{
+  border-left:1px dashed #c6cde0!important;
+}
+#page-matches .likes-section .empty,
+#page-matches .likes-grid.empty{
+  background:#fff!important;
+  color:#687086!important;
+  border:1px dashed #d9dfed!important;
+}
+@media(max-width:520px){
+  #page-matches .likes-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important}
+  #page-matches .likes-person-card{padding:6px!important;gap:6px!important}
+  #page-matches .likes-card-actions{gap:3px!important}
+  #page-matches .likes-card-actions button{font-size:9px!important;padding:6px 2px!important}
+}
+
 </style>
 
 </head>
