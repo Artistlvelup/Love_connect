@@ -772,6 +772,19 @@ body:has(#app:not(.hidden)) .landing-hero{display:none!important}
 @media(min-width:760px){#page-messages #chat{left:50%!important;right:auto!important;width:min(760px,100%)!important;transform:translateX(-50%);box-shadow:0 0 0 100vmax #0009!important;border-left:1px solid #26363e!important;border-right:1px solid #26363e!important}}
 @media(max-width:420px){#page-messages #chat .chat-room-toolbar{min-height:62px;padding:6px 9px!important;gap:8px}#page-messages #chat .chat-header-avatar{flex-basis:42px;width:42px;height:42px}#page-messages #chat .lc-chat-bubble{max-width:90%;font-size:.96rem}}
 
+
+/* Robust chat-room overrides: apply even when the room is nested under the inbox panel */
+body #chat:not(.hidden){position:fixed!important;inset:0!important;z-index:2147483000!important;display:flex!important;flex-direction:column!important;width:100vw!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;padding:0!important;overflow:hidden!important;border:0!important;border-radius:0!important;background:#0b141a!important;color:#e9edef!important}
+body #chat:not(.hidden) #chatHistory{flex:1 1 0!important;min-height:0!important;max-height:none!important;display:flex!important;flex-direction:column!important;overflow-y:auto!important;background:#0b141a!important;color:#e9edef!important;border:0!important;border-radius:0!important}
+body #chat:not(.hidden) .lc-chat-bubble{display:flex!important;flex-direction:column!important;width:fit-content!important;max-width:84%!important;margin:3px 0!important;padding:8px 10px 5px!important;border-radius:8px!important;color:#e9edef!important}
+body #chat:not(.hidden) .lc-chat-incoming{align-self:flex-start!important;background:#202c33!important;border-top-left-radius:2px!important}
+body #chat:not(.hidden) .lc-chat-outgoing{align-self:flex-end!important;background:#005c4b!important;border-top-right-radius:2px!important}
+body #chat:not(.hidden) .lc-chat-time{align-self:flex-end!important;margin-top:4px!important;color:#b6c7c4!important;font-size:.68rem!important}
+body #chat:not(.hidden) .chat-room-toolbar{flex-wrap:nowrap!important;background:#202c33!important;color:#f5f7f8!important;margin:0!important;padding:8px 14px!important}
+body #chat:not(.hidden) #chatForm{margin:0!important;padding:10px 12px max(12px,env(safe-area-inset-bottom))!important;background:#202c33!important;border-radius:0!important}
+body #chat:not(.hidden) #chatText{background:#2a3942!important;color:#e9edef!important;border:0!important;border-radius:24px!important}
+body #chat:not(.hidden) .chat-safety-actions,body #chat:not(.hidden) #chatSafetyStatus{background:#0b141a!important;color:#aebac1!important}
+
 </style>
 
 </head>
