@@ -1231,43 +1231,52 @@ const chatBackButton=$("chatBackButton");if(chatBackButton)chatBackButton.onclic
 async function loadChat(){if(!chatMember)return;try{const d=await api("/api/messages/"+chatMember.id);$("chatHistory").innerHTML=d.messages.length?d.messages.map(m=>{const who=String(m.sender_id)===String(me.id)?"You":escapeHtml(chatMember.displayName);const stamp=escapeHtml(new Date(m.created_at).toLocaleString());const body=String(m.body||"");let content;if(body.startsWith("LCVOICE1|")){const parts=body.split("|");const mime=parts[1]||"audio/webm";const data=parts.slice(2).join("|");content='<div class="voice-note-message">🎙️ Voice note<audio controls preload="metadata" src="data:'+escapeHtml(mime)+';base64,'+data+'"></audio></div>'}else{content=escapeHtml(body)}return '<div class="lc-chat-bubble '+(String(m.sender_id)===String(me.id)?"lc-chat-outgoing":"lc-chat-incoming")+'">'+content+'<span class="lc-chat-time">'+stamp+''+(String(m.sender_id)===String(me.id)?' <span class="lc-chat-check">✓✓</span>':'')+'</span></div>'}).join(""):"No messages yet. Say hello!";$("chatHistory").scrollTop=$("chatHistory").scrollHeight;$("chatSafetyStatus").textContent=""}catch(e){$("chatSafetyStatus").textContent=e.message;messagesStatus(e.message,true)}}
 $("reportChatMember").onclick=async()=>{if(!chatMember)return;const reason=prompt("Why are you reporting this member?");if(!reason)return;try{await api("/api/members/"+chatMember.id+"/report",{method:"POST",body:JSON.stringify({reason})});$("chatSafetyStatus").textContent="Report submitted. Thank you for helping keep Love Connect safe."}catch(e){$("chatSafetyStatus").textContent=e.message}};
 $("blockChatMember").onclick=async()=>{if(!chatMember||!confirm("Block this member? They will no longer appear in discovery or be able to message you."))return;try{await api("/api/members/"+chatMember.id+"/block",{method:"POST",body:"{}"});$("chatSafetyStatus").textContent="Member blocked. This chat is closed.";$("chatForm").classList.add("hidden");$("chatHistory").classList.add("hidden");$("reportChatMember").disabled=true;$("blockChatMember").disabled=true;chatMember=null;loadFeed()}catch(e){$("chatSafetyStatus").textContent=e.message}};
-$("chatForm").onsubmit=async e=>{e.preventDefault();if(!chatMember)return;const text=$("chatText").value.trim();if(!text)return;try{await api("/api/messages/"+chatMember.id,{method:"POST",body:JSON.stringify({body:text})});$("chatText").value="";await loadChat()}catch(err){messagesStatus(err.message,true)}};
+$("chatForm").onsubmit=async e=>{e.preventDefault();if(!chatMember)return;if(voiceRecorder&&voiceRecorder.state==="recording"){voiceSendOnStop=true;const status=$("voiceNoteStatus");status.textContent="Finishing recording and sending…";setVoiceButton(false,true);try{voiceRecorder.stop()}catch(err){voiceSendOnStop=false;status.textContent="Could not finish recording. Please try again."}return}if(voiceDraftBlob){await sendVoiceDraft();return}const text=$("chatText").value.trim();if(!text)return;try{await api("/api/messages/"+chatMember.id,{method:"POST",body:JSON.stringify({body:text})});$("chatText").value="";await loadChat()}catch(err){messagesStatus(err.message,true)}};
 const chatEmojiButton=$("chatEmojiButton");if(chatEmojiButton)chatEmojiButton.onclick=()=>{const input=$("chatText");if(!input)return;const start=input.selectionStart??input.value.length,end=input.selectionEnd??input.value.length;input.value=input.value.slice(0,start)+"😊"+input.value.slice(end);input.focus();input.setSelectionRange(start+2,start+2);input.dispatchEvent(new Event("input",{bubbles:true}));};
 const chatMoreButton=$("chatMoreButton");if(chatMoreButton)chatMoreButton.onclick=()=>{const actions=$("chatSafetyActions");if(actions){actions.classList.toggle("chat-options-open");chatMoreButton.setAttribute("aria-expanded",String(actions.classList.contains("chat-options-open")));}};
 
-let voiceRecorder=null,voiceChunks=[],voiceStream=null,voiceTimer=null,voiceSending=false;
+let voiceRecorder=null,voiceChunks=[],voiceStream=null,voiceTimer=null,voiceSending=false,voiceDraftBlob=null,voiceSendOnStop=false,voiceDraftMime="audio/webm";
 const voiceButton=$("voiceNoteButton");
 const voiceMicIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"></path></svg>';
 const voiceStopIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>';
-function setVoiceButton(recording=false,disabled=false){if(!voiceButton)return;voiceButton.classList.toggle("recording",recording);voiceButton.disabled=disabled;voiceButton.innerHTML=recording?voiceStopIcon:voiceMicIcon;voiceButton.setAttribute("aria-label",recording?"Stop recording and send voice note":"Record voice note");voiceButton.title=recording?"Tap to stop and send":"Record voice note";}
+function setVoiceButton(recording=false,disabled=false){if(!voiceButton)return;voiceButton.classList.toggle("recording",recording);voiceButton.disabled=disabled;voiceButton.innerHTML=recording?voiceStopIcon:voiceMicIcon;voiceButton.setAttribute("aria-label",recording?"Stop recording":"Record voice note");voiceButton.title=recording?"Stop recording":"Record voice note";}
+async function sendVoiceDraft(){
+ if(!voiceDraftBlob||!chatMember||voiceSending)return;
+ voiceSending=true;const status=$("voiceNoteStatus");status.textContent="Sending voice note…";
+ try{
+  if(voiceDraftBlob.size>280000)throw new Error("This voice note is too large to send. Please record a shorter note (up to about 15 seconds).");
+  const reader=new FileReader();const data=await new Promise((resolve,reject)=>{reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=()=>reject(new Error("Could not prepare the voice note."));reader.readAsDataURL(voiceDraftBlob)});
+  const body="LCVOICE1|"+(voiceDraftBlob.type||voiceDraftMime||"audio/webm")+"|"+data;
+  await api("/api/messages/"+chatMember.id,{method:"POST",body:JSON.stringify({body})});
+  voiceDraftBlob=null;$("chatText").value="";status.textContent="Voice note sent.";await loadChat();
+ }catch(err){status.textContent=err.message||"Could not send voice note."}
+ finally{voiceSending=false;setVoiceButton(false)}
+}
 if(voiceButton)voiceButton.onclick=async()=>{
  const status=$("voiceNoteStatus");
  if(voiceSending)return;
- if(voiceRecorder&&voiceRecorder.state==="recording"){voiceButton.disabled=true;status.textContent="Finishing recording…";try{voiceRecorder.stop()}catch(err){setVoiceButton(false);status.textContent="Could not stop recording. Please try again."}return}
+ if(voiceRecorder&&voiceRecorder.state==="recording"){status.textContent="Recording ready when you stop. Tap the send arrow to send it.";setVoiceButton(false,true);try{voiceRecorder.stop()}catch(err){setVoiceButton(false);status.textContent="Could not stop recording. Please try again."}return}
  if(!chatMember){status.textContent="Open a conversation before recording a voice note.";return}
  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){status.textContent="Voice recording is not supported in this browser. Open Love Connect in Chrome and allow microphone access.";return}
  setVoiceButton(false,true);status.textContent="Requesting microphone access…";
  try{
   voiceStream=await navigator.mediaDevices.getUserMedia({audio:true});
-  const mimeType=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg;codecs=opus"].find(t=>MediaRecorder.isTypeSupported(t));
-  voiceRecorder=new MediaRecorder(voiceStream,mimeType?{mimeType}:undefined);voiceChunks=[];
+  const mimeType=["audio/webm;codecs=opus","audio/ogg;codecs=opus","audio/mp4","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t));
+  voiceRecorder=new MediaRecorder(voiceStream,mimeType?{mimeType}:undefined);voiceChunks=[];voiceDraftBlob=null;voiceDraftMime=voiceRecorder.mimeType||mimeType||"audio/webm";
   voiceRecorder.ondataavailable=e=>{if(e.data&&e.data.size)voiceChunks.push(e.data)};
-  voiceRecorder.onerror=()=>{clearTimeout(voiceTimer);voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;voiceSending=false;setVoiceButton(false);status.textContent="Recording failed. Please check microphone permission and try again."};
+  voiceRecorder.onerror=()=>{clearTimeout(voiceTimer);voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;voiceSending=false;voiceSendOnStop=false;setVoiceButton(false);status.textContent="Recording failed. Please check microphone permission and try again."};
   voiceRecorder.onstop=async()=>{
-   clearTimeout(voiceTimer);voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;setVoiceButton(false,true);voiceSending=true;status.textContent="Preparing voice note…";
-   try{
-    const recorder=voiceRecorder;const blob=new Blob(voiceChunks,{type:recorder?.mimeType||"audio/webm"});voiceChunks=[];
-    if(!blob.size)throw new Error("No audio was captured. Tap the microphone and speak, then stop.");
-    if(blob.size>280000)throw new Error("This voice note is too large to send. Please record a shorter note (up to about 15 seconds).");
-    const reader=new FileReader();const data=await new Promise((resolve,reject)=>{reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=()=>reject(new Error("Could not prepare the voice note."));reader.readAsDataURL(blob)});
-    const body="LCVOICE1|"+(blob.type||"audio/webm")+"|"+data;
-    await api("/api/messages/"+chatMember.id,{method:"POST",body:JSON.stringify({body})});
-    status.textContent="Voice note sent.";await loadChat();
-   }catch(err){status.textContent=err.message||"Could not send voice note."}
-   finally{voiceSending=false;setVoiceButton(false)}
+   clearTimeout(voiceTimer);voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;
+   const recorder=voiceRecorder;const chunks=voiceChunks.slice();voiceChunks=[];
+   voiceDraftBlob=new Blob(chunks,{type:recorder?.mimeType||voiceDraftMime||"audio/webm"});
+   voiceDraftMime=voiceDraftBlob.type||voiceDraftMime;
+   setVoiceButton(false);
+   if(!voiceDraftBlob.size){voiceDraftBlob=null;status.textContent="No audio was captured. Tap the microphone and speak, then stop.";return}
+   if(voiceSendOnStop){voiceSendOnStop=false;await sendVoiceDraft();return}
+   status.textContent="Voice note ready. Tap the send arrow to send it.";
   };
-  voiceRecorder.start();setVoiceButton(true);status.textContent="Recording… speak now, then tap the red stop button to send";
-  voiceTimer=setTimeout(()=>{if(voiceRecorder?.state==="recording"){status.textContent="15-second limit reached. Sending voice note…";voiceRecorder.stop()}},15000);
+  voiceRecorder.start(1000);setVoiceButton(true);status.textContent="Recording… tap the send arrow when you finish";
+  voiceTimer=setTimeout(()=>{if(voiceRecorder?.state==="recording"){status.textContent="15-second limit reached. Preparing voice note…";voiceRecorder.stop()}},15000);
  }catch(err){voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;setVoiceButton(false);status.textContent=err.name==="NotAllowedError"||err.name==="PermissionDeniedError"?"Microphone access was denied. Allow microphone access for this site in your browser settings, then try again.":err.message||"Could not start recording. Check microphone access and try again."}
 };
 async function loadMyPhoto(){loadOwnerGallery();const img=$("myPhotoPreview"),placeholder=$("myPhotoPlaceholder"),remove=$("removePhotoButton");img.onload=()=>{img.classList.remove("hidden");placeholder.classList.add("hidden");if(remove)remove.classList.remove("hidden")};img.onerror=()=>{img.classList.add("hidden");placeholder.classList.remove("hidden");if(remove)remove.classList.add("hidden");img.removeAttribute("src")};img.src="/api/members/"+encodeURIComponent(me.id)+"/photo?fresh="+Date.now()}
