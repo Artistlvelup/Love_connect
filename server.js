@@ -53,6 +53,50 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: "200kb", verify: (req, _res, buf) => { req.rawBody = Buffer.from(buf); } }));
 app.use(express.urlencoded({ extended: false, limit: "50kb" }));
 app.set("trust proxy", 1);
+
+// Verify the selected profile country against the country reported for the
+// request IP. This is a practical anti-misrepresentation check, not proof of
+// nationality; VPNs/proxies can make IP-based country detection inaccurate.
+const COUNTRY_ALIASES = {
+  "us": "united states", "usa": "united states", "uk": "united kingdom",
+  "uae": "united arab emirates", "south korea": "korea, republic of",
+  "north korea": "korea, democratic people's republic of"
+};
+function normalizeCountry(value) {
+  const normalized = String(value || "").trim().toLowerCase().replace(/[.]/g, "").replace(/\\s+/g, " ");
+  return COUNTRY_ALIASES[normalized] || normalized;
+}
+async function verifyCountryFromConnection(req, selectedCountry) {
+  const chosen = String(selectedCountry || "").trim();
+  if (!chosen) return { ok: false, status: 400, error: "Choose your actual country to continue." };
+  if (!isProduction) return { ok: true };
+  const ip = String(req.ip || "").replace(/^::ffff:/, "").trim();
+  if (!ip || ip === "::1" || ip === "127.0.0.1" || /^(10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.)/.test(ip)) {
+    return { ok: false, status: 503, error: "We could not verify your connection country. Turn off VPN/proxy and try again." };
+  }
+  try {
+    const response = await fetch("https://ipwho.is/" + encodeURIComponent(ip), {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!response.ok) throw new Error("Country lookup failed");
+    const data = await response.json();
+    if (data.success !== true || !data.country || !data.country_code) throw new Error("Country lookup unavailable");
+    const selected = normalizeCountry(chosen);
+    const actual = normalizeCountry(data.country);
+    const code = String(data.country_code).trim().toLowerCase();
+    if (selected !== actual && selected !== code) {
+      return {
+        ok: false,
+        status: 403,
+        error: "Country verification failed. Your connection appears to be from " + data.country + ", but you selected " + chosen + ". Select " + data.country + " or connect from that country without a VPN/proxy."
+      };
+    }
+    return { ok: true };
+  } catch (_error) {
+    return { ok: false, status: 503, error: "Country verification is temporarily unavailable. Please try again shortly." };
+  }
+}
 app.use(session({
   store: new PgSession({ pool, tableName: "user_sessions", createTableIfMissing: true }),
   name: "loveconnect.sid",
@@ -520,6 +564,8 @@ app.post("/api/auth/register", async (req, res, next) => {
         !displayName || displayName.trim().length > 60 || !validAdultDate(birthDate)) {
       return res.status(400).json({ error: "Enter a valid email, a password of at least 10 characters, a name, and a birth date confirming you are 18 or older." });
     }
+    const countryCheck = await verifyCountryFromConnection(req, country);
+    if (!countryCheck.ok) return res.status(countryCheck.status).json({ error: countryCheck.error });
     const hash = await bcrypt.hash(password, 12);
     const result = await pool.query(
       "INSERT INTO members(email,password_hash,display_name,birth_date,country,looking_for) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,email,display_name,country,bio,looking_for",
@@ -546,6 +592,8 @@ app.post("/api/auth/login", async (req, res, next) => {
     if (!result.rowCount || !(await bcrypt.compare(String(req.body?.password || ""), result.rows[0].password_hash))) {
       return res.status(401).json({ error: "Email or password is incorrect." });
     }
+    const countryCheck = await verifyCountryFromConnection(req, result.rows[0].country);
+    if (!countryCheck.ok) return res.status(countryCheck.status).json({ error: countryCheck.error });
     req.session.regenerate(err => {
       if (err) return next(err);
       req.session.memberId = result.rows[0].id;
@@ -573,6 +621,8 @@ app.patch("/api/me", requireAuth, async (req, res, next) => {
         String(country || "").length > 80 || String(lookingFor || "Connections").length > 80) {
       return res.status(400).json({ error: "Please check your profile fields." });
     }
+    const countryCheck = await verifyCountryFromConnection(req, country);
+    if (!countryCheck.ok) return res.status(countryCheck.status).json({ error: countryCheck.error });
     const r = await pool.query(
       "UPDATE members SET display_name=$1,country=$2,bio=$3,looking_for=$4 WHERE id=$5 RETURNING id,email,display_name,country,bio,looking_for",
       [String(displayName).trim(), String(country || ""), String(bio || ""), String(lookingFor || "Connections"), req.session.memberId]
