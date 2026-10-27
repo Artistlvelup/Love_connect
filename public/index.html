@@ -966,6 +966,29 @@ body #chat:not(.hidden) .chat-safety-actions.chat-options-open{
  #page-messages.chat-room-open #chat #chatForm{gap:4px!important;padding-left:7px!important;padding-right:7px!important}
 }
 
+
+/* User-selected Love Connect composer buttons: green circular microphone and send */
+#page-messages.chat-room-open #chat .voice-note-button,
+body #chat:not(.hidden) .voice-note-button{
+  width:44px!important;height:44px!important;min-width:44px!important;flex:0 0 44px!important;
+  border-radius:50%!important;background:#16a34a!important;color:#fff!important;
+  border:0!important;box-shadow:0 3px 8px rgba(22,163,74,.22)!important;
+}
+#page-messages.chat-room-open #chat .voice-note-button svg,
+body #chat:not(.hidden) .voice-note-button svg{stroke:currentColor!important}
+#page-messages.chat-room-open #chat #chatForm button.primary,
+body #chat:not(.hidden) #chatForm button.primary{
+  width:44px!important;height:44px!important;min-width:44px!important;flex:0 0 44px!important;
+  border-radius:50%!important;background:#16a34a!important;color:#fff!important;
+  box-shadow:0 3px 8px rgba(22,163,74,.22)!important;
+}
+#page-messages.chat-room-open #chat #chatForm button.primary:active,
+body #chat:not(.hidden) #chatForm button.primary:active{background:#15803d!important}
+#page-messages.chat-room-open #chat .voice-note-button.recording,
+body #chat:not(.hidden) .voice-note-button.recording{
+  background:#c92854!important;color:#fff!important;border:0!important;
+}
+
 </style>
 
 </head>
