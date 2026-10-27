@@ -1264,11 +1264,11 @@ if(voiceButton)voiceButton.onclick=async()=>{
  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){status.textContent="Microphone recording is not supported here. Open Love Connect in Chrome and allow microphone access.";return}
  voiceRequesting=true;const requestId=++voiceRequestId;setVoiceButton(false,false);status.textContent="Starting microphone… 0:00";
  try{
-  const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+  let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(firstError){if(firstError.name==="NotAllowedError"||firstError.name==="PermissionDeniedError"||firstError.name==="NotFoundError"||firstError.name==="NotReadableError")throw firstError;stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}
   if(!voiceRequesting||requestId!==voiceRequestId){stream.getTracks().forEach(t=>t.stop());return}
   voiceRequesting=false;voiceStream=stream;
   const mimeType=["audio/webm;codecs=opus","audio/ogg;codecs=opus","audio/mp4","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t));
-  voiceRecorder=new MediaRecorder(voiceStream,mimeType?{mimeType}:undefined);voiceChunks=[];voiceDraftBlob=null;voiceDraftMime=voiceRecorder.mimeType||mimeType||"audio/webm";
+  try{voiceRecorder=mimeType?new MediaRecorder(voiceStream,{mimeType}):new MediaRecorder(voiceStream)}catch(_){voiceRecorder=new MediaRecorder(voiceStream)}voiceChunks=[];voiceDraftBlob=null;voiceDraftMime=voiceRecorder.mimeType||mimeType||"audio/webm";
   voiceRecorder.ondataavailable=e=>{if(e.data&&e.data.size)voiceChunks.push(e.data)};
   voiceRecorder.onerror=()=>{clearVoiceClock();voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;voiceSending=false;voiceSendOnStop=false;setVoiceButton(false);status.textContent="Recording failed. Check microphone permission and try again."};
   voiceRecorder.onstart=()=>{voiceStartedAt=Date.now();setVoiceButton(true);status.textContent="● Recording 0:00 · Tap the send arrow to finish and send";voiceClock=setInterval(updateVoiceClock,250);voiceTimer=setTimeout(()=>{if(voiceRecorder?.state==="recording"){status.textContent="1:00 limit reached. Finishing voice note…";try{voiceRecorder.stop()}catch(_){setVoiceButton(false)}}},60000)};
