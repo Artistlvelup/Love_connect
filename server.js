@@ -69,9 +69,9 @@ function normalizeCountry(value) {
 async function verifyCountryFromConnection(req, selectedCountry) {
   const chosen = String(selectedCountry || "").trim();
   if (!chosen) return { ok: false, status: 400, error: "Choose your actual country to continue." };
-  if (!isProduction) return { ok: true };
   const ip = String(req.ip || "").replace(/^::ffff:/, "").trim();
   if (!ip || ip === "::1" || ip === "127.0.0.1" || /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(ip)) {
+    if (!isProduction) return { ok: true };
     return { ok: false, status: 503, error: "We could not verify your connection country. Turn off VPN/proxy and try again." };
   }
   try {
