@@ -1235,16 +1235,19 @@ $("chatForm").onsubmit=async e=>{e.preventDefault();if(!chatMember)return;if(voi
 const chatEmojiButton=$("chatEmojiButton");if(chatEmojiButton)chatEmojiButton.onclick=()=>{const input=$("chatText");if(!input)return;const start=input.selectionStart??input.value.length,end=input.selectionEnd??input.value.length;input.value=input.value.slice(0,start)+"😊"+input.value.slice(end);input.focus();input.setSelectionRange(start+2,start+2);input.dispatchEvent(new Event("input",{bubbles:true}));};
 const chatMoreButton=$("chatMoreButton");if(chatMoreButton)chatMoreButton.onclick=()=>{const actions=$("chatSafetyActions");if(actions){actions.classList.toggle("chat-options-open");chatMoreButton.setAttribute("aria-expanded",String(actions.classList.contains("chat-options-open")));}};
 
-let voiceRecorder=null,voiceChunks=[],voiceStream=null,voiceTimer=null,voiceSending=false,voiceDraftBlob=null,voiceSendOnStop=false,voiceDraftMime="audio/webm",voiceRequesting=false,voiceRequestId=0;
+let voiceRecorder=null,voiceChunks=[],voiceStream=null,voiceTimer=null,voiceClock=null,voiceStartedAt=0,voiceSending=false,voiceDraftBlob=null,voiceSendOnStop=false,voiceDraftMime="audio/webm",voiceRequesting=false,voiceRequestId=0;
 const voiceButton=$("voiceNoteButton");
 const voiceMicIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"></path></svg>';
 const voiceStopIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>';
+function voiceElapsed(){const seconds=Math.max(0,Math.floor((Date.now()-voiceStartedAt)/1000));return Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0")}
+function updateVoiceClock(){const status=$("voiceNoteStatus");if(status&&voiceRecorder?.state==="recording")status.textContent="● Recording "+voiceElapsed()+" · Tap the send arrow to finish and send"}
+function clearVoiceClock(){if(voiceClock){clearInterval(voiceClock);voiceClock=null}clearTimeout(voiceTimer)}
 function setVoiceButton(recording=false,disabled=false){if(!voiceButton)return;voiceButton.classList.toggle("recording",recording);voiceButton.disabled=disabled;voiceButton.innerHTML=recording?voiceStopIcon:voiceMicIcon;voiceButton.setAttribute("aria-label",recording?"Stop recording":"Record voice note");voiceButton.title=recording?"Stop recording":"Record voice note";}
 async function sendVoiceDraft(){
  if(!voiceDraftBlob||!chatMember||voiceSending)return;
  voiceSending=true;const status=$("voiceNoteStatus");status.textContent="Sending voice note…";
  try{
-  if(voiceDraftBlob.size>280000)throw new Error("This voice note is too large to send. Please record a shorter note (up to about 15 seconds).");
+  if(voiceDraftBlob.size>1000000)throw new Error("This voice note is too large to send. Please record a shorter note.");
   const reader=new FileReader();const data=await new Promise((resolve,reject)=>{reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=()=>reject(new Error("Could not prepare the voice note."));reader.readAsDataURL(voiceDraftBlob)});
   const body="LCVOICE1|"+(voiceDraftBlob.type||voiceDraftMime||"audio/webm")+"|"+data;
   await api("/api/messages/"+chatMember.id,{method:"POST",body:JSON.stringify({body})});
@@ -1255,11 +1258,11 @@ async function sendVoiceDraft(){
 if(voiceButton)voiceButton.onclick=async()=>{
  const status=$("voiceNoteStatus");
  if(voiceSending)return;
- if(voiceRequesting){voiceRequesting=false;voiceRequestId++;setVoiceButton(false);status.textContent="Microphone request cancelled. Tap the microphone to try again.";return}
- if(voiceRecorder&&voiceRecorder.state==="recording"){status.textContent="Finishing recording…";setVoiceButton(false,true);try{voiceRecorder.stop()}catch(err){setVoiceButton(false);status.textContent="Could not stop recording. Please try again."}return}
+ if(voiceRequesting){voiceRequesting=false;voiceRequestId++;setVoiceButton(false);status.textContent="Microphone request cancelled. Tap to try again.";return}
+ if(voiceRecorder&&voiceRecorder.state==="recording"){status.textContent="Finishing "+voiceElapsed()+"…";setVoiceButton(false,true);clearVoiceClock();try{voiceRecorder.stop()}catch(err){setVoiceButton(false);status.textContent="Could not stop recording. Please try again."}return}
  if(!chatMember){status.textContent="Open a conversation before recording a voice note.";return}
- if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){status.textContent="This browser cannot access the microphone here. Open Love Connect in Chrome and allow microphone access.";return}
- voiceRequesting=true;const requestId=++voiceRequestId;setVoiceButton(false,false);status.textContent="Requesting microphone access… tap the microphone again to cancel.";
+ if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){status.textContent="Microphone recording is not supported here. Open Love Connect in Chrome and allow microphone access.";return}
+ voiceRequesting=true;const requestId=++voiceRequestId;setVoiceButton(false,false);status.textContent="Starting microphone… 0:00";
  try{
   const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
   if(!voiceRequesting||requestId!==voiceRequestId){stream.getTracks().forEach(t=>t.stop());return}
@@ -1267,22 +1270,20 @@ if(voiceButton)voiceButton.onclick=async()=>{
   const mimeType=["audio/webm;codecs=opus","audio/ogg;codecs=opus","audio/mp4","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t));
   voiceRecorder=new MediaRecorder(voiceStream,mimeType?{mimeType}:undefined);voiceChunks=[];voiceDraftBlob=null;voiceDraftMime=voiceRecorder.mimeType||mimeType||"audio/webm";
   voiceRecorder.ondataavailable=e=>{if(e.data&&e.data.size)voiceChunks.push(e.data)};
-  voiceRecorder.onerror=()=>{clearTimeout(voiceTimer);voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;voiceSending=false;voiceSendOnStop=false;setVoiceButton(false);status.textContent="Recording failed. Check microphone permission and try again."};
+  voiceRecorder.onerror=()=>{clearVoiceClock();voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;voiceSending=false;voiceSendOnStop=false;setVoiceButton(false);status.textContent="Recording failed. Check microphone permission and try again."};
+  voiceRecorder.onstart=()=>{voiceStartedAt=Date.now();setVoiceButton(true);status.textContent="● Recording 0:00 · Tap the send arrow to finish and send";voiceClock=setInterval(updateVoiceClock,250);voiceTimer=setTimeout(()=>{if(voiceRecorder?.state==="recording"){status.textContent="1:00 limit reached. Finishing voice note…";try{voiceRecorder.stop()}catch(_){setVoiceButton(false)}}},60000)};
   voiceRecorder.onstop=async()=>{
-   clearTimeout(voiceTimer);voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;
+   clearVoiceClock();voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;
    const recorder=voiceRecorder;const chunks=voiceChunks.slice();voiceChunks=[];
-   voiceDraftBlob=new Blob(chunks,{type:recorder?.mimeType||voiceDraftMime||"audio/webm"});
-   voiceDraftMime=voiceDraftBlob.type||voiceDraftMime;
+   voiceDraftBlob=new Blob(chunks,{type:recorder?.mimeType||voiceDraftMime||"audio/webm"});voiceDraftMime=voiceDraftBlob.type||voiceDraftMime;
    setVoiceButton(false);
-   if(!voiceDraftBlob.size){voiceDraftBlob=null;status.textContent="No audio was captured. Check microphone permission and speak while recording.";return}
+   if(!voiceDraftBlob.size){voiceDraftBlob=null;status.textContent="No audio was captured. Check microphone permission and try again.";return}
    if(voiceSendOnStop){voiceSendOnStop=false;await sendVoiceDraft();return}
-   status.textContent="Voice note ready. Tap the send arrow to send it.";
+   status.textContent="Voice note ready ("+voiceElapsed()+"). Tap the send arrow to send it.";
   };
-  voiceRecorder.start(500);setVoiceButton(true);status.textContent="Recording… tap the send arrow when you finish";
-  voiceTimer=setTimeout(()=>{if(voiceRecorder?.state==="recording"){status.textContent="15-second limit reached. Preparing voice note…";try{voiceRecorder.stop()}catch(_){setVoiceButton(false)}}},15000);
+  voiceRecorder.start(250);status.textContent="● Recording 0:00 · Tap the send arrow to finish and send";
  }catch(err){
-  voiceRequesting=false;
-  voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;setVoiceButton(false);
+  voiceRequesting=false;voiceStream?.getTracks().forEach(t=>t.stop());voiceStream=null;setVoiceButton(false);
   status.textContent=err.name==="NotAllowedError"||err.name==="PermissionDeniedError"?"Microphone access was denied. Allow microphone access for Love Connect in your browser settings, then try again.":err.name==="NotFoundError"?"No microphone was found on this device.":err.message||"Could not start recording. Check microphone access and try again.";
  }
 };
