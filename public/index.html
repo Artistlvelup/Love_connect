@@ -874,6 +874,98 @@ body #chat:not(.hidden) .chat-safety-actions,body #chat:not(.hidden) #chatSafety
 #page-messages .voice-note-button:disabled{opacity:.58;cursor:wait}
 #page-messages .voice-note-status{font-size:.82rem;line-height:1.45;color:#66758b}
 @media(max-width:700px){#page-messages .voice-note-button{width:44px!important;height:44px!important;min-width:44px!important;flex-basis:44px!important;border-radius:14px!important}}
+
+/* Professional WhatsApp-style chat refresh: real API and call behaviour remain unchanged */
+#page-messages.chat-room-open,
+#page-messages.chat-room-open>.messages-panel,
+#page-messages.chat-room-open #chat:not(.hidden),
+body #chat:not(.hidden){background:#efeae2!important;color:#111b21!important}
+#page-messages.chat-room-open #chat .chat-room-toolbar,
+body #chat:not(.hidden) .chat-room-toolbar{
+  min-height:68px!important;padding:9px 16px!important;gap:12px!important;
+  background:#fdfdfd!important;color:#111b21!important;border-bottom:1px solid #e7e9eb!important;
+  box-shadow:0 1px 3px rgba(16,24,40,.05)!important
+}
+#page-messages.chat-room-open #chat .chat-back-button,
+body #chat:not(.hidden) .chat-back-button{color:#54656f!important;background:transparent!important}
+#page-messages.chat-room-open #chat .chat-header-avatar,
+body #chat:not(.hidden) .chat-header-avatar{
+  background:linear-gradient(145deg,#d9f2e9,#c4e8dc)!important;color:#087e68!important;
+  border:0!important;box-shadow:none!important
+}
+#page-messages.chat-room-open #chat .chat-room-person h3,
+body #chat:not(.hidden) #chatTitle{color:#111b21!important;font-size:1.02rem!important;font-weight:700!important}
+#page-messages.chat-room-open #chat .chat-video-call-button,
+#page-messages.chat-room-open #chat .chat-more-button,
+body #chat:not(.hidden) .chat-video-call-button,
+body #chat:not(.hidden) .chat-more-button{color:#54656f!important;background:transparent!important;box-shadow:none!important}
+#page-messages.chat-room-open #chat #chatHistory,
+body #chat:not(.hidden) #chatHistory{
+  background-color:#efeae2!important;
+  background-image:radial-gradient(ellipse at 15% 15%,rgba(255,255,255,.28),transparent 34%),radial-gradient(ellipse at 85% 70%,rgba(210,196,177,.18),transparent 38%)!important;
+  padding:20px clamp(12px,3vw,28px) 24px!important;gap:3px!important
+}
+#page-messages.chat-room-open #chat .lc-chat-bubble,
+body #chat:not(.hidden) .lc-chat-bubble{
+  max-width:min(82%,560px)!important;padding:9px 11px 6px!important;margin:3px 0!important;
+  border:1px solid rgba(0,0,0,.035)!important;border-radius:12px!important;
+  color:#111b21!important;font-size:.96rem!important;line-height:1.42!important;
+  box-shadow:0 1px 1px rgba(17,27,33,.07)!important
+}
+#page-messages.chat-room-open #chat .lc-chat-incoming,
+body #chat:not(.hidden) .lc-chat-incoming{background:#fff!important;border-top-left-radius:4px!important}
+#page-messages.chat-room-open #chat .lc-chat-outgoing,
+body #chat:not(.hidden) .lc-chat-outgoing{background:#d9fdd3!important;border-top-right-radius:4px!important}
+#page-messages.chat-room-open #chat .lc-chat-time,
+body #chat:not(.hidden) .lc-chat-time{color:#667781!important;font-size:.68rem!important}
+#page-messages.chat-room-open #chat .lc-chat-check,
+body #chat:not(.hidden) .lc-chat-check{color:#53a7c5!important}
+#page-messages.chat-room-open #chat #chatForm,
+body #chat:not(.hidden) #chatForm{
+  gap:9px!important;padding:10px 14px max(12px,env(safe-area-inset-bottom))!important;
+  background:#f7f8f8!important;border-top:1px solid #e5e7e8!important
+}
+#page-messages.chat-room-open #chat #chatText,
+body #chat:not(.hidden) #chatText{
+  min-height:46px!important;padding:12px 16px!important;border:1px solid #e1e5e7!important;
+  border-radius:24px!important;background:#fff!important;color:#111b21!important;
+  box-shadow:0 1px 2px rgba(16,24,40,.04)!important
+}
+#page-messages.chat-room-open #chat #chatText:focus,
+body #chat:not(.hidden) #chatText:focus{outline:2px solid rgba(0,168,132,.18)!important;border-color:#82cbb9!important}
+#page-messages.chat-room-open #chat .chat-emoji-button,
+#page-messages.chat-room-open #chat .voice-note-button,
+body #chat:not(.hidden) .chat-emoji-button,
+body #chat:not(.hidden) .voice-note-button{color:#52656d!important;background:transparent!important;border:0!important}
+#page-messages.chat-room-open #chat #chatForm button.primary,
+body #chat:not(.hidden) #chatForm button.primary{
+  background:#00a884!important;color:#fff!important;border-radius:50%!important;
+  box-shadow:0 3px 8px rgba(0,168,132,.2)!important;transition:transform .15s ease,background .15s ease
+}
+#page-messages.chat-room-open #chat #chatForm button.primary:active,
+body #chat:not(.hidden) #chatForm button.primary:active{transform:scale(.95)!important;background:#008f72!important}
+#page-messages.chat-room-open #chat #voiceNoteStatus,
+body #chat:not(.hidden) #voiceNoteStatus{background:#f7f8f8!important;color:#667781!important;padding:0 16px 7px!important}
+#page-messages.chat-room-open #chat .voice-note-button.recording,
+body #chat:not(.hidden) .voice-note-button.recording{background:#ffe8eb!important;color:#c62845!important;border:1px solid #f3b8c2!important}
+#page-messages.chat-room-open #chat .voice-note-message audio,
+body #chat:not(.hidden) .voice-note-message audio{width:min(290px,68vw)!important;max-width:100%!important}
+#page-messages.chat-room-open #chat #chatSafetyStatus,
+body #chat:not(.hidden) #chatSafetyStatus{background:#efeae2!important;color:#52656d!important}
+#page-messages.chat-room-open #chat .chat-safety-actions.chat-options-open,
+body #chat:not(.hidden) .chat-safety-actions.chat-options-open{
+  background:#fff!important;border:1px solid #e4e8e9!important;border-radius:14px!important;
+  box-shadow:0 10px 30px rgba(17,27,33,.16)!important
+}
+@media(min-width:760px){
+ #page-messages.chat-room-open #chat:not(.hidden){border:1px solid #e3e5e6!important;box-shadow:0 0 0 100vmax rgba(15,25,30,.55)!important}
+}
+@media(max-width:420px){
+ #page-messages.chat-room-open #chat .chat-room-toolbar{min-height:62px!important;padding:7px 9px!important}
+ #page-messages.chat-room-open #chat .lc-chat-bubble{max-width:88%!important;font-size:.95rem!important}
+ #page-messages.chat-room-open #chat #chatForm{gap:4px!important;padding-left:7px!important;padding-right:7px!important}
+}
+
 </style>
 
 </head>
