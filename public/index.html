@@ -608,41 +608,65 @@ body:has(#app:not(.hidden)) .landing-hero{display:none!important}
 #page-video>.ad-space button{background:linear-gradient(100deg,#ff7da8,#ffbd8b)!important;color:#25163d!important;border:0!important;border-radius:999px!important;font-weight:850!important}
 @media(max-width:700px){#page-video .sponsor-card{padding:22px!important;min-height:240px!important;background:radial-gradient(circle at 90% 0%,rgba(255,111,168,.38),transparent 38%),linear-gradient(135deg,#171b3d,#353079 52%,#563078)!important}#page-video .sponsor-card h3{font-size:1.3rem!important}#page-video .sponsor-card button,#page-video .sponsor-card a.soft{width:auto!important;max-width:100%!important}}
 
-/* Premium advertiser booking experience: vivid, trustworthy, and conversion-focused */
+/* Premium black-and-gold advertiser booking room */
 #page-advertise .advertise-panel{
   position:relative;overflow:hidden;
-  background:linear-gradient(145deg,#ffffff 0%,#f5f2ff 46%,#fff0f6 100%)!important;
-  border:1px solid #d9d0ff!important;
-  box-shadow:0 24px 65px rgba(8,14,40,.3)!important;
+  background:linear-gradient(145deg,#101010 0%,#191919 55%,#242017 100%)!important;
+  border:1px solid #8f712d!important;border-radius:24px!important;
+  box-shadow:0 24px 65px rgba(0,0,0,.42)!important;color:#f8f3e5!important;
 }
-#page-advertise .ad-heading{max-width:800px;padding:22px;border-radius:22px;background:linear-gradient(115deg,#191f49 0%,#5938a8 55%,#db3e87 100%);color:#fff;box-shadow:0 15px 32px rgba(63,43,131,.22)}
-#page-advertise .ad-heading .pill{background:#ffe1ee;color:#762454;padding:7px 12px}
-#page-advertise .ad-heading .section-title{color:#fff!important;font-size:clamp(1.8rem,4vw,2.55rem);margin-top:13px}
-#page-advertise .ad-heading p{color:#f2eaff!important}
-#page-advertise .ad-packages{gap:13px}
-#page-advertise .ad-package-card{border:2px solid #ded8f6!important;border-radius:20px!important;background:linear-gradient(160deg,#fff 0%,#f3f0ff 100%)!important;box-shadow:0 10px 24px rgba(46,38,104,.1)!important;transition:box-shadow .15s,border-color .15s!important}
-#page-advertise .ad-package-card:nth-child(2){background:linear-gradient(155deg,#fff7fb,#ffe8f2)!important;border-color:#f2bfd8!important}
-#page-advertise .ad-package-card:nth-child(3){background:linear-gradient(155deg,#f0fffc,#e2f8f4)!important;border-color:#a6e6d8!important}
-#page-advertise .ad-package-card:has(input:checked),#page-advertise .ad-package-card.selected{border-color:#7749d6!important;box-shadow:0 0 0 4px rgba(119,73,214,.17),0 16px 30px rgba(46,38,104,.15)!important}
-#page-advertise .ad-package-top>span{color:#6540b5!important;font-size:.98rem}
-#page-advertise .ad-package-top strong{color:#1c2341!important;font-size:clamp(1.55rem,3vw,2rem)}
-#page-advertise .ad-package-description{color:#59627d!important}
-#page-advertise .ad-package-prompt{color:#bd347c!important;font-size:.85rem}
-#page-advertise .ad-subheading{color:#222647!important;font-size:1.25rem}
-#page-advertise .ad-form{background:rgba(255,255,255,.9)!important;border:1px solid #ddd8f4!important;box-shadow:inset 0 1px 0 #fff}
-#page-advertise .ad-form .field,#page-advertise .ad-form .field>span:first-child{color:#252946!important}
-#page-advertise .ad-form .field input,#page-advertise .ad-form .field textarea{background:#fff!important;color:#20243d!important;border-color:#d4d5e9!important}
-#page-advertise .ad-field-help,#page-advertise .ad-optional{color:#69718a!important}
-#page-advertise .ad-payment-note{background:linear-gradient(110deg,#edf4ff,#f5edff)!important;border:1px solid #c9d5fb!important;color:#414969!important}
-#page-advertise .ad-payment-note strong{color:#34226f!important}
-#page-advertise .ad-submit{background:linear-gradient(105deg,#e83e89 0%,#8a4fe3 55%,#5541bd 100%)!important;color:#fff!important;box-shadow:0 12px 25px rgba(115,53,169,.3)!important;border-radius:15px!important;font-weight:850;letter-spacing:.01em}
-#page-advertise .ad-submit:hover{box-shadow:0 16px 30px rgba(115,53,169,.4)!important}
-#page-advertise .ad-my-campaigns{color:#323957!important}
-#page-advertise .ad-my-campaigns .plan{background:#f4f2ff;border:1px solid #ddd5fa;border-radius:14px;padding:14px;color:#252946}
-.video-post{position:relative}
-.video-sound-toggle{position:absolute;top:12px;right:12px;z-index:3;background:linear-gradient(110deg,#ff668f,#8053df)!important;color:#fff!important;border:1px solid #ffffff80!important;border-radius:999px!important;padding:9px 13px!important;font-size:.82rem;box-shadow:0 6px 18px #080d1c66!important}
-.video-sound-toggle[hidden]{display:none!important}
-@media(max-width:650px){#page-advertise .ad-heading{padding:19px;border-radius:18px}#page-advertise .ad-package-card{padding:15px}.video-sound-toggle{top:9px;right:9px;padding:8px 11px!important}}
+#page-advertise .ad-heading{
+  max-width:800px;padding:clamp(20px,3vw,30px);border-radius:22px;
+  background:linear-gradient(125deg,#050505 0%,#171717 60%,#3a2d0e 100%);
+  border:1px solid #a88635;box-shadow:0 14px 34px #0008;position:relative;
+}
+#page-advertise .ad-heading:after{content:"";display:block;width:72px;height:3px;margin-top:20px;border-radius:9px;background:linear-gradient(90deg,#f8df8b,#b58a2a)}
+#page-advertise .ad-heading .pill{background:#d9b85b;color:#17130a;padding:8px 13px;font-weight:900;letter-spacing:.08em}
+#page-advertise .ad-heading .section-title{color:#f6d982!important;font-size:clamp(1.8rem,4vw,2.55rem);margin-top:14px;letter-spacing:-.035em}
+#page-advertise .ad-heading p{color:#e6dfce!important;line-height:1.75}
+#page-advertise .ad-packages{gap:13px;margin-top:24px}
+#page-advertise .ad-package-card{
+  border:1px solid #5c512f!important;border-radius:20px!important;
+  background:linear-gradient(155deg,#202020 0%,#121212 100%)!important;
+  color:#f6f0df!important;box-shadow:0 12px 27px #0005!important;
+  transition:transform .16s,border-color .16s,box-shadow .16s!important;
+}
+#page-advertise .ad-package-card:nth-child(2){background:linear-gradient(155deg,#2b2414,#151515)!important;border-color:#9c7a2c!important}
+#page-advertise .ad-package-card:nth-child(3){background:linear-gradient(155deg,#302919,#151515)!important;border-color:#7d672f!important}
+#page-advertise .ad-package-card:has(input:checked),#page-advertise .ad-package-card.selected{
+  border:2px solid #e0bd57!important;background:linear-gradient(145deg,#342a13,#171717)!important;
+  box-shadow:0 0 0 3px #d5ad3c30,0 17px 35px #0008!important;
+}
+#page-advertise .ad-package-card input{accent-color:#d9b54f}
+#page-advertise .ad-package-top>span{color:#e4c56c!important;font-size:.98rem;font-weight:850}
+#page-advertise .ad-package-top strong{color:#fff3ca!important;font-size:clamp(1.55rem,3vw,2rem)}
+#page-advertise .ad-package-description{color:#c9c1ae!important}
+#page-advertise .ad-package-prompt{color:#f0d16f!important;font-size:.85rem}
+#page-advertise .ad-subheading{color:#f2d578!important;font-size:1.25rem}
+#page-advertise .ad-form{background:linear-gradient(145deg,#1d1d1d,#131313)!important;border:1px solid #554724!important;border-radius:20px!important;box-shadow:inset 0 1px 0 #ffffff0a}
+#page-advertise .ad-form .field,#page-advertise .ad-form .field>span:first-child{color:#f4eddb!important}
+#page-advertise .ad-form .field input,#page-advertise .ad-form .field textarea{
+  background:#0c0c0c!important;color:#fff8e7!important;border:1px solid #5b5138!important;border-radius:12px!important;
+}
+#page-advertise .ad-form .field input:focus,#page-advertise .ad-form .field textarea:focus{outline:3px solid #d8b54a35!important;border-color:#d8b54a!important}
+#page-advertise .ad-form .field input::placeholder,#page-advertise .ad-form .field textarea::placeholder{color:#9d9788!important}
+#page-advertise .ad-field-help,#page-advertise .ad-optional{color:#b7ae98!important}
+#page-advertise .ad-payment-note{background:linear-gradient(110deg,#292313,#1c1a13)!important;border:1px solid #7c652a!important;color:#e9dfc4!important;border-radius:15px!important}
+#page-advertise .ad-payment-note strong{color:#f5d978!important}
+#page-advertise .ad-submit{
+  background:linear-gradient(105deg,#f3d778 0%,#c79b2e 48%,#9c7419 100%)!important;
+  color:#151108!important;border:1px solid #ffe9a0!important;box-shadow:0 12px 28px #c3972638!important;
+  border-radius:15px!important;font-weight:900;letter-spacing:.01em;min-height:56px;
+}
+#page-advertise .ad-submit:hover{filter:brightness(1.08);box-shadow:0 16px 34px #c397264a!important}
+#page-advertise .ad-my-campaigns{color:#eee4c9!important}
+#page-advertise .ad-my-campaigns .plan{background:#1b1b1b;border:1px solid #66552c;border-radius:14px;padding:14px;color:#f5edda}
+#page-advertise .ad-my-campaigns h3,#page-advertise .ad-my-campaigns strong{color:#f1d276!important}
+#page-advertise .ad-my-campaigns a{color:#f1d276}
+@media(max-width:650px){
+ #page-advertise .ad-heading{padding:19px;border-radius:18px}
+ #page-advertise .ad-package-card{padding:15px}
+}
 
 </style>
 
