@@ -699,6 +699,39 @@ body:has(#app:not(.hidden)) .landing-hero{display:none!important}
 #page-matches .likes-section .empty{grid-column:1/-1;border:1px dashed #65552c!important;background:#1b1a15!important;color:#c6bda8!important;border-radius:15px;padding:22px}
 @media(max-width:520px){#page-matches .likes-page-heading{padding:21px 17px}#page-matches .likes-grid{grid-template-columns:1fr}#page-matches .match-person-card{flex-wrap:wrap}#page-matches .likes-card-actions{width:100%;padding-left:79px}#page-matches .likes-card-actions button{flex:1}}
 
+/* Likes & Matches — Design 6: Instagram-style compact profile grid */
+#page-matches .likes-page-heading{padding:19px 20px 17px;border-radius:18px}
+#page-matches .likes-page-heading h1{font-size:clamp(1.55rem,4vw,2.15rem)}
+#page-matches .likes-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start}
+#page-matches .likes-person-card{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:0;padding:9px;border:1px solid #3b3b3b;border-radius:15px;background:#171717;box-shadow:0 4px 14px #0002;overflow:hidden}
+#page-matches .likes-avatar{display:block;width:100%;height:auto;aspect-ratio:1/1;flex:0 0 auto;object-fit:cover;border:0;border-radius:10px;background:#292315;box-shadow:none}
+#page-matches .likes-avatar-initial{display:grid;place-items:center;font-size:clamp(1.2rem,3vw,2rem);font-weight:900;color:#17130a;background:linear-gradient(145deg,#f7e6a2,#b68b2c)}
+#page-matches .likes-person-info{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+#page-matches .likes-person-info strong{font-size:.86rem;line-height:1.25;overflow-wrap:anywhere}
+#page-matches .likes-person-info>span:not(.match-status){font-size:.75rem}
+#page-matches .likes-status{align-self:flex-start;max-width:100%;padding:4px 7px;font-size:.66rem;line-height:1.2;white-space:normal}
+#page-matches .match-status{font-size:.68rem;line-height:1.25}
+#page-matches .likes-card-actions{display:grid;grid-template-columns:1fr;gap:5px;width:100%;justify-content:stretch}
+#page-matches .likes-card-actions button{width:100%;min-width:0;padding:7px 5px;border-radius:8px;font-size:.72rem;white-space:normal;line-height:1.2}
+#page-matches .likes-grid.empty{display:block;padding:22px;border:1px dashed #65552c;border-radius:15px;background:#171717;color:#c6bda8}
+@media(max-width:520px){
+ #page-matches .likes-page-heading{padding:17px 15px}
+ #page-matches .likes-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ #page-matches .likes-person-card{padding:6px;gap:6px;border-radius:12px}
+ #page-matches .likes-avatar{border-radius:8px}
+ #page-matches .likes-person-info strong{font-size:.74rem}
+ #page-matches .likes-person-info>span:not(.match-status){font-size:.68rem}
+ #page-matches .likes-status{font-size:.59rem;padding:4px 5px}
+ #page-matches .match-status{font-size:.62rem}
+ #page-matches .likes-card-actions{gap:4px}
+ #page-matches .likes-card-actions button{font-size:.62rem;padding:6px 3px}
+}
+@media(min-width:760px){
+ #page-matches .likes-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+ #page-matches .likes-person-card{padding:11px}
+ #page-matches .likes-card-actions{grid-template-columns:1fr 1fr}
+}
+
 /* Professional light Messages experience */
 #page-messages{--msg-ink:#172b4d;--msg-muted:#66758b;--msg-line:#e4ebf3;--msg-blue:#2563eb;--msg-teal:#0f9f9a;color:var(--msg-ink)}
 #page-messages .messages-panel{background:#f5f8fc!important;border:1px solid #e7edf5!important;border-radius:24px!important;padding:clamp(16px,3vw,30px)!important;box-shadow:0 14px 38px rgba(28,52,88,.08)!important;min-height:65vh}
