@@ -688,8 +688,8 @@ app.get("/api/discover", requireAuth, async (req, res, next) => {
       CROSS JOIN (SELECT latitude,longitude FROM members WHERE id=$1) viewer
       WHERE m.id <> $1
         AND NOT EXISTS (SELECT 1 FROM member_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=m.id) OR (b.blocker_id=m.id AND b.blocked_id=$1))
-      ORDER BY m.created_at DESC LIMIT 50
-    `, [req.session.memberId]);
+      ORDER BY m.created_at DESC LIMIT 50 OFFSET $2
+    `, [req.session.memberId, Math.max(0, Math.min(100000, Number.parseInt(req.query.offset, 10) || 0))]);
     const ids = r.rows.map(x => x.id);
     let videoRows = [];
     if (ids.length) {
