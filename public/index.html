@@ -1138,6 +1138,118 @@ body #chat:not(.hidden) .voice-note-button.recording{
   #page-matches .likes-card-actions button{font-size:9px!important;padding:6px 2px!important}
 }
 
+
+
+/* Love Connect Discover theme adapted from the supplied dark/pink design.
+   Scoped to the existing Discover page so the other pages and navigation stay intact. */
+#page-discover{
+  color:#e9edef;
+  background:#0b0b12;
+  border-radius:18px;
+}
+#page-discover .discover-toolbar{gap:8px}
+#page-discover .discover-search{
+  background:#181825!important;
+  color:#fff!important;
+  border:1px solid rgba(255,255,255,.1)!important;
+  border-radius:22px!important;
+}
+#page-discover .discover-search::placeholder{color:#aebac1!important}
+#page-discover .post-video-btn{
+  background:#ff2d7a!important;
+  color:#fff!important;
+  border:0!important;
+  border-radius:22px!important;
+}
+#page-discover .discover-heading{color:#fff}
+#page-discover .discover-heading p{color:#aebac1}
+#page-discover .filter-row{gap:8px;padding:2px 0 12px}
+#page-discover .filter-chip{
+  white-space:nowrap;
+  background:#232334!important;
+  border:1px solid rgba(255,255,255,.1)!important;
+  color:#e9edef!important;
+  border-radius:20px!important;
+  padding:7px 13px!important;
+  font-size:12px!important;
+}
+#page-discover .filter-chip.active{
+  background:#fff!important;
+  color:#111!important;
+  border-color:#fff!important;
+}
+#page-discover .story{color:#e9edef}
+#page-discover .story-ring span{background:#232334;color:#fff;border-color:#343448}
+#page-discover #feed{margin-top:10px}
+#page-discover .swipe-stage{
+  width:min(100%,390px);
+  height:min(650px,calc(100dvh - 245px));
+  min-height:400px;
+}
+#page-discover .swipe-profile{
+  background:#12121a;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;
+  box-shadow:0 20px 40px rgba(0,0,0,.5);
+}
+#page-discover .swipe-photo{
+  background:linear-gradient(145deg,#46324c,#171b36 55%,#157e79);
+}
+#page-discover .swipe-profile-info{
+  background:#12121a!important;
+  color:#fff!important;
+  padding:15px 16px 13px;
+}
+#page-discover .swipe-goal{
+  background:rgba(255,45,122,.15)!important;
+  color:#ff8bb5!important;
+}
+#page-discover .swipe-profile-info>p{color:#c5c8d3!important}
+#page-discover .swipe-buttons{gap:18px}
+#page-discover .swipe-buttons button{
+  background:#232334;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
+#page-discover .swipe-pass{
+  color:#ff4458;
+  border:1px solid rgba(255,68,88,.3);
+}
+#page-discover .swipe-details{
+  color:#aebac1;
+  border:1px solid rgba(255,255,255,.12);
+}
+#page-discover .swipe-like{
+  background:#ff2d7a!important;
+  color:#fff!important;
+  box-shadow:0 8px 24px rgba(255,45,122,.25)!important;
+}
+#page-discover .swipe-help{color:#8696a0}
+#page-discover .swipe-empty{
+  background:#12121a;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;
+  box-shadow:0 20px 40px rgba(0,0,0,.35);
+  color:#fff;
+}
+#page-discover .swipe-empty h3{color:#fff}
+#page-discover .swipe-empty p{color:#aebac1}
+#page-discover .swipe-empty button{
+  background:#ff2d7a!important;
+  color:#fff!important;
+  border:0!important;
+  border-radius:24px!important;
+}
+@media(max-width:600px){
+  #page-discover{border-radius:0}
+  #page-discover .swipe-stage{
+    width:100%;
+    height:calc(100dvh - 270px);
+    min-height:390px;
+    max-height:650px;
+  }
+  #page-discover .swipe-profile{border-radius:20px}
+}
+
 </style>
 
 </head>
