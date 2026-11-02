@@ -1366,9 +1366,42 @@ body #chat:not(.hidden) .voice-note-button.recording{
 </section>
 
 </div>
-</main><nav class="mobile-nav auth-hidden" id="mobileNav" aria-label="Main navigation"><button data-page="discover" class="active">♡<span>Swipe</span></button><button data-page="video">⌕<span>Explore</span></button><button data-page="matches">♥<span>Likes</span></button><button data-page="messages">▢<span>Chat</span></button><button data-page="calls">📹<span>Video call</span></button><button data-page="profile">♙<span>Profile</span></button></nav><footer class="footer"><div class="wrap">♡ Love Connect <span class="muted">Meet people. Be yourself. Keep it kind.</span></div></footer>
+</main><nav class="mobile-nav auth-hidden" id="mobileNav" aria-label="Main navigation"><button data-page="discover" class="active">♡<span>Swipe</span></button><button data-page="video">⌕<span>Explore</span></button><button data-page="matches">♥<span>Likes</span></button><button data-page="messages">▢<span>Chat</span></button><button data-page="calls">📹<span>Video call</span></button><button data-page="profile">♙<span>Profile</span></button></nav><footer class="footer"><div class="wrap">♡ Love Connect <span class="muted">Meet people. Be yourself. Keep it kind.</span>
+<div id="appwriteConnectionPanel" style="margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff;max-width:520px">
+  <strong>Appwrite connection</strong>
+  <p class="muted small" style="margin:4px 0 10px">Verify that Love Connect can reach its Appwrite project.</p>
+  <button type="button" class="soft" id="appwritePingButton">Test Appwrite connection</button>
+  <span id="appwritePingStatus" class="small muted" role="status" aria-live="polite" style="display:block;margin-top:8px">Not tested yet.</span>
+</div>
+</div></footer>
+<script src="https://sdk.appwrite.io/web/29.1.0/sdk.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);let isRegister=true,me=null,chatMember=null,subscriptionActive=false,launchFreeAccess=false,registeredMembers=0,launchFreeMemberLimit=2000;
+const APPWRITE_ENDPOINT="https://fra.cloud.appwrite.io/v1";
+const APPWRITE_PROJECT_ID="6ae90d6f0001893ae5e2";
+const appwritePingButton=$("appwritePingButton");
+if(appwritePingButton)appwritePingButton.addEventListener("click",async()=>{
+  const status=$("appwritePingStatus");
+  appwritePingButton.disabled=true;
+  appwritePingButton.textContent="Testing…";
+  status.textContent="Connecting to Appwrite…";
+  status.className="small muted";
+  try{
+    if(!window.Appwrite||!window.Appwrite.Client)throw new Error("The Appwrite Web SDK could not load. Refresh the page and try again.");
+    const client=new window.Appwrite.Client()
+      .setEndpoint(APPWRITE_ENDPOINT)
+      .setProject(APPWRITE_PROJECT_ID);
+    const response=await client.ping();
+    status.textContent="Connected successfully to Appwrite. "+(typeof response==="string"?response:"Ping successful.");
+    status.className="small";
+  }catch(error){
+    status.textContent="Connection test failed: "+(error&&error.message?error.message:"Unknown error")+". Check that this website's hostname is added as a Web platform in the Appwrite Console.";
+    status.className="small";
+  }finally{
+    appwritePingButton.disabled=false;
+    appwritePingButton.textContent="Test Appwrite connection";
+  }
+});
 function say(text,error=false){$("message").innerHTML=text?'<div class="status '+(error?'error':'')+'">'+escapeHtml(text)+'</div>':""}
 function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 async function api(url,options={}){const res=await fetch(url,{cache:"no-store",credentials:"same-origin",...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});let data={};try{data=await res.json()}catch{}if(!res.ok)throw new Error(data.error||"Request failed");return data}
