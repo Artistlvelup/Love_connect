@@ -1391,8 +1391,18 @@ if(appwritePingButton)appwritePingButton.addEventListener("click",async()=>{
     const client=new window.Appwrite.Client()
       .setEndpoint(APPWRITE_ENDPOINT)
       .setProject(APPWRITE_PROJECT_ID);
+    // The Web SDK Client currently has no built-in ping() method.
+    // Add the Appwrite /ping endpoint as client.ping() using the SDK's configured headers.
+    client.ping=async()=>{
+      const response=await fetch(APPWRITE_ENDPOINT+"/ping",{
+        method:"GET",
+        headers:{...client.getHeaders(),"X-Appwrite-Project":APPWRITE_PROJECT_ID}
+      });
+      if(!response.ok)throw new Error("Appwrite returned HTTP "+response.status);
+      return response.json().catch(()=>({ok:true}));
+    };
     const response=await client.ping();
-    status.textContent="Connected successfully to Appwrite. "+(typeof response==="string"?response:"Ping successful.");
+    status.textContent="Connected successfully to Appwrite. Ping successful.";
     status.className="small";
   }catch(error){
     status.textContent="Connection test failed: "+(error&&error.message?error.message:"Unknown error")+". Check that this website's hostname is added as a Web platform in the Appwrite Console.";
